@@ -49,7 +49,7 @@ app.polymorphic_path(p)
 
 ```
 
-If we pass an instance of the `Profile` class to `polymorphic_path`, the method first checks to see whether the record can be converted to a model by calling...`to_model`. Let's give our class the ability to respond to that message:
+If we pass an instance of the `Person` class to `polymorphic_path`, the method first checks to see whether the record can be converted to a model by calling...`to_model`. Let's give our class the ability to respond to that message:
 
 ```ruby
 class Person
