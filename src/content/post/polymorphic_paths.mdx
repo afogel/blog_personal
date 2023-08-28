@@ -1,0 +1,215 @@
+---
+publishDate: 2023-08-28T00:00:00Z
+title: How do Rails Form Helpers Know Where to Go?
+excerpt: Exploring how
+image: https://images.unsplash.com/photo-1456024569359-9e78b5d10a80?auto=format&fit=crop&w=2069&q=80
+category: Documentation
+tags:
+  - Rails 7
+  - Form Object Pattern
+metadata:
+  canonical: https://fogel.dev/polymorphic_paths
+---
+
+import DListItem from '~/components/ui/DListItem.astro';
+import ToggleTheme from '~/components/common/ToggleTheme.astro';
+
+# Why do Rails 7 Form Helpers accept the parameters they do?
+
+Have you ever wondered how `form_with` helpers function?
+
+How is it possible that they can infer a) how to handle building a path, and b) whether the path should be to create a new instance or update an existing instance?
+
+TL;DR: if an object defines behavior from `ActiveModel::Model` on its own instances, or delegates the `persisted?` and `to_model` messages to an instance that has `ActiveModel::Model` behavior defined on itself, the `form_with` method is able to correctly extrapolate the resource name, action, and if appropriate, resource ID.
+
+This can be particularly useful if you are leveraging the Form Object Pattern to build complex forms that either don't map directly to a single resource/route or that you work like to coerce to map to a particular resources routes.
+
+### The Deep Dive
+
+The secret lies in 2 clever instance methods that are defined in `ActiveModel::Model` and leveraged by the [`polymorphic_path` method](https://github.com/rails/rails/blob/main/actionpack/lib/action_dispatch/routing/polymorphic_routes.rb#L126):
+
+- `persisted?`
+- `to_model`
+
+For the purposes of this exercise, let's build up the contract required for the polymorphic_path from a PORO (Plain Old Ruby Object). Imagine we have a `Person` class:
+
+```ruby
+class Person
+  def initialize(id)
+    @id = id
+  end
+end
+
+# rails console
+p = Person.new(1)
+app.polymorphic_path(p)
+# => NoMethodError: undefined method `to_model' for #<Person:0x000000011707ec58 @id=1>
+
+```
+
+If we pass an instance of the `Profile` class to `polymorphic_path`, the method first checks to see whether the record can be converted to a model by calling...`to_model`. Let's give our class the ability to respond to that message:
+
+```ruby
+class Person
+  def initialize(id)
+    @id = id
+  end
+
+  def to_model
+    self
+  end
+end
+
+# rails console
+p = Person.new(1)
+app.polymorphic_path(p)
+# => NoMethodError: undefined method `model_name' for #<Person:0x0000000117327860 @id=1>
+```
+
+As a model, the routes helper expects that our `Person` class will also be able to respond to the `model_name` message with an object an object that responds to `name`:
+
+```ruby
+ModelName = Struct.new(:name)
+class Person
+  def initialize(id)
+    @id = id
+  end
+
+  def to_model
+    self
+  end
+
+  def model_name
+    ModelName.new('Person')
+  end
+end
+
+# rails console
+p = Person.new(1)
+app.polymorphic_path(p)
+# => NoMethodError: undefined method `persisted?' for #<Person:0x00000001173958d8 @id=1>
+```
+
+Next, the polymorphic_path checks to see whether the object is `persisted?`. When `persisted?`, the `polymorphic_path` method attempts to construct a path for the `edit` action. Otherwise, it attempts to construct a path for the `create` action.
+
+Let's see how adding a `persisted?` method changes the behavior:
+
+```ruby
+ModelName = Struct.new(:name)
+class Person
+  def initialize(id)
+    @id = id
+  end
+
+  def to_model
+    self
+  end
+
+  def model_name
+    ModelName.new('Person')
+  end
+
+  def persisted?
+    false
+  end
+end
+
+# rails console
+p = Person.new(1)
+app.polymorphic_path(p)
+# => NoMethodError: undefined method `route_key' for #<struct ModelName name="person">
+```
+
+Seems like `polymorphic_path` is expecting model_name to also respond to `:route_key`, which would be the pluralized version of the class name:
+
+```ruby
+ModelName = Struct.new(:name, :route_key)
+class Person
+  def initialize(id)
+    @id = id
+  end
+
+  def to_model
+    self
+  end
+
+  def model_name
+    ModelName.new('Person', 'people')
+  end
+
+  def persisted?
+    false
+  end
+end
+
+# rails console
+p = Person.new(1)
+app.polymorphic_path(p)
+# => NoMethodError: undefined method `people_path'
+```
+
+Success! At this point, polymorphic_path has generated a path that, if defined in our routes file, would map to a controller action!
+What happens if our model is `persisted?`? In that case, `polymorphic_path` expects that `model_name` will respond to a `singular_route_key` call:
+
+```ruby
+ModelName = Struct.new(:name, :route_key, :singular_route_key)
+class Person
+  def initialize(id)
+    @id = id
+  end
+
+  def to_model
+    self
+  end
+
+  def model_name
+    ModelName.new('Person', 'people', 'person')
+  end
+
+  def persisted?
+    true
+  end
+end
+
+# rails console
+p = Person.new(1)
+app.polymorphic_path(p)
+# => NoMethodError: undefined method `person_path'
+```
+
+Pretty close! The only outstanding detail to confirm is that the polymorphic_path is correctly populating the correct ID (i.e. `1`) for our instance. After updating the `routes.rb` with `resources :person`, we see our `person_path` is populated with the ruby object's ID in memory, rather than the ID stored in the instance variable.
+
+To remedy this, we need to override our PORO's definition of `to_param`:
+
+```ruby
+ModelName = Struct.new(:name, :route_key, :singular_route_key)
+class Person
+  def initialize(id)
+    @id = id
+  end
+
+  def to_model
+    self
+  end
+
+  def model_name
+    ModelName.new('Person', 'people', 'person')
+  end
+
+  def persisted?
+    true
+  end
+
+  def to_param
+    @id.to_s
+  end
+end
+# rails console
+p = Person.new(1)
+app.polymorphic_path(p)
+# => "/person/1"
+```
+
+SUCCESS! While building up the API of messages a PORO must respond to is a good exercise to better understand the inner workings of an API we might take for granted, it's impractical to worry about defining these methods on every object.
+
+Thankfully, we are able to `include ActiveModel::Model` in our PORO to gain access to these methods, or we can choose to `delegate :persisted?, :to_model` to another model.
