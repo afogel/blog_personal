@@ -1,0 +1,73 @@
+---
+title: What makes for a good pull request?
+excerpt: Wisdom from the distributed beyond
+publishDate: 2023-05-09T00:00:00Z
+image: https://images.unsplash.com/photo-1585909695284-32d2985ac9c0?auto=format&fit=crop&w=1068&q=80
+tags:
+  - web development
+  - cultural practices
+---
+
+## Some quick context
+
+Over the last few months, I've started job hunting and getting back into the mindset of working with a larger team. As part of that effort, I've begun spending time with the [Agency of Learning](https://agencyoflearning.com/), started by my friend Dave Paola.
+
+Though I can't recommend enough how impressive and wonderful the community is generally, there have been some nuggets that I think merit immortalizing in print (and, frankly, so I can quickly access them myself!).
+
+## Communication is key
+
+Working with such exceptional talent has reminded me that one of the hallmarks of strong software developers and an engineering culture of excellence is clear technical communication.
+
+This is not a particularly revelatory observation. Good communication is touted in most, if not all professional domains, as a key to success. But there are a few key practices that most software developers do as part of their day-to-day workflow that require strong _written_ communication.
+
+In this blog post, I'll focus specifically on **pull requests**. Here is where I think some of the suggestions made by friends in the Agency of Learning can come in handy.
+
+Though much ink has already been spilled over what makes a good pull request and why, I'll just review a few of the ideas I think are important to keep in mind so that the next bit of advice is as relevant as possible.
+
+When creating a pull request, you are trying to integrate your work with the rest of the codebase. Successfully integrating your code will enshrine the code you've written as the current authoritative way to perform _X_ functionality.
+
+For that reason, you want to make sure that the code you're proposing is:
+
+- correct,
+- easy to understand, and
+- acts as a good role model for others who read the code and want to contribute
+
+## Before you PR...
+
+So without further ado, I present a starting template of questions to address in a PR, similar to a [pilot's preflight checklist](https://en.wikipedia.org/wiki/Preflight_checklist).
+
+I think addressing these questions will have two major benefits:
+First, I think it will help make it easier for others to review your code and feel confident that the code performs what you say it does.
+Secondly, like the preflight checklist, I think they will help instill in you a sixth sense to avoid errors/bugs [as much as possible] and to have a plan to recover from those bugs quickly.
+
+I don't think that all PRs need to address every one of these questions, but they should address most of them.
+
+### Description of the PR
+
+1. What's the change?
+2. What key workflows are impacted?
+3. Highlights / Surprises / Risks / Cleanup
+4. Demo / Screenshots
+
+### Your Coding Preflight Checklist
+
+1. Did you add appropriate automated tests?
+2. Did you consider risks around security, performance, etc.?
+   1. Have you thought of misfiring code? e.g. too many loops, n+1, or how to handle `nil`s?
+   2. Any validations to data needed?
+3. Related to readability and consistency: Did you add comments and/or documentation? (README, Notion, etc.)
+   1. Is everything elevated to the highest level? (e.g., can logic be moved out of view into controllers, or out of controllers into models?)
+   2. Can (and should) any models be extracted?
+   3. Is there any linting that needs to be executed?
+4. Did you leave helpful inline PR comments for the reviewer(s)?
+5. Did you include instructions for how to test in the ticket?
+6. Did you add any relevant tags and decide if this PR is a Draft vs. Ready for Review?
+7. Do you have a plan for how this change should be rolled back? (e.g., how do you deal with a migration rollback? Is your feature released behind a feature flag?)
+
+Finally, if you're making a PR on a new project (FOSS or a new job's codebase), it may be worthwhile to look through previous (recently merged) PRs and copy the processes and format that they use.
+
+N.B. Since we're on the topic of PRs, I think it's also worth noting that how you leave comments/reviews in PRs can be really important. As Chris White at thoughtbot has said, ["Don't review PRs Like a Space Wizard"](https://thoughtbot.com/blog/don-t-review-prs-like-a-space-wizard). In short, try to be friendly and persuasive about why a change should be made rather than simply dictating that it should be a change.
+
+### Acknowledgements
+
+A huge thank you to the awesome crew at Agency of Learning for sharing their wisdom and thoughts, especially Jack Schuss, Alex Spencer, and Cody Norman.

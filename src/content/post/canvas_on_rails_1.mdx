@@ -1,0 +1,72 @@
+---
+title: HTML5 Canvas on Rails? Part 1
+description: Why this approach?
+publishDate: 2022-12-22T00:00:00Z
+image: https://images.unsplash.com/photo-1580493113011-ad79f792a7c2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1935&q=80
+category: Tutorials
+tags:
+  - web development
+  - rails
+  - canvas
+  - ruby
+---
+
+<div style="width: 100%; background-color: #52606D; padding: 0.25rem 2rem; margin-top: 1.5rem;">
+<h3 id='overview'>Series Overview</h3>
+
+Vanilla rails doesn't really give much guidance for how best to interact with an HTML5 canvas. This series represents my suggestion for how to build features in a way that conforms to StimulusJS and Rails conventions. To showcase this approach, I walk through building a proof-of-concept toy app that allows the user to draw annotations on top of an image and persist those annotations.
+
+1. [The first post](../canvas_on_rails_1) lays out the basic approach and why I decided to design the code in this way.
+2. [The second post](../canvas_on_rails_2) guides the reader through building out the necessary boilerplate for the app to function.
+3. [The third post](../canvas_on_rails_3) guides the reader through building the interactive canvas functionality.
+4. [The final post](../canvas_on_rails_4) contains a summary of this approach and the final code for the server-side HTML, Rails controller, and Stimulus controller.
+
+You can head over to the [github repo](https://github.com/afogel/ror_canvas_toy_app/) to inspect the full code.
+
+If you'd like to skip the tutorial and view just the final Stimulus controller, Rails controller, and server-side rendered HTML form [click here to jump directly to part 4](../canvas_on_rails_4#final-state-of-the-rails-form-and-stimulus-controller).
+
+</div>
+
+### TL;DR
+
+**The core idea is that the Stimulus controller should _only_ handle canvas interactions. Managing state, fetching data, and persisting data should still be implemented using conventional HTML forms and server-side HTML rendering as often as possible.**
+
+Here's a quick video of what we'll be building. Watch the lion in the foreground of the following video:
+
+
+<video loop autoplay controls>
+  <source src="https://ik.imagekit.io/fogel/ror_demo_trimmed.webm" type="video/webm" />
+  <source src="https://ik.imagekit.io/fogel/ror_demo.mp4" type="video/mp4" />
+</video>
+
+### Context
+
+I really enjoy working with Ruby on Rails, but one aspect that has always troubled me is the tenuous relationship that vanilla Rails has had with the world of Javascript. The philosphical approach of Basecamp's [Majestic Monolith](https://m.signalvnoise.com/the-majestic-monolith-29166d022228) (and, by extension, an approach that seems to be espoused by much of the Rails core team) is that there are significant benefits associated with applications that are predominantly server-side rendered HTML with "sprinkles of Javascript to make them sparkle".
+
+With the introduction of [StimulusJS](https://stimulus.hotwired.dev), I've started to see this approach distilled into easy-to-use interfaces through stimulus controllers. The Stimulus controllers I've seen to date tend to be small, quick to grok, and easily reusable.
+
+While this works for most features we build, sometimes we need to support different types of interactivity that enable users to perform many client-side manipulations of some data before sending the payload back to the server to be persisted. These features might necessarily rely on technologies that don't avail themselves to being rendered server-side.
+
+A concrete example of this work might be drawing on images, a task that is well suited to be addressed by a technology like the HTML5 Canvas. While reaching for HTML5 Canvas seems to be correct inasmuch as it's an appropriate tool for the job, accessing the canvas's API is restricted to Javascript-land and, as a result, likely requires more than "just a sprinkle of Javascript" to enable the desired functionality.
+
+So here's the big question: **What's the appopriate amount of Javascript to write in this case?**
+
+One approach might be to build pages that need to interact with the canvas the way Single Page App (SPAs) are built. In following this approach, I'd anticipate that the server would initially serve an HTML page and populate that skeleton with data fetched asyncronously from the server. One benefit of this approach would be that the client-side logic is located in a single, centralized file.
+
+However, I think there are a few potential drawbacksƒ associated with this approach. First, it pushes more of the state management to the Stimulus controller. While this isn't a dealbreaker, it complicates the responsibilities of the stimulus controller, growing them beyond the sole responsibility of Canvas interactions.
+
+Relatedly, using a single stimulus controller for everything might encourage pushing future features into the same stimulus controller, leading to a very large and complicated file. Most of all, I think this approach encourages moving away from a vanilla Rails approach in which a single controller is responsible for managing a resource's CRUD operations, which could lead to a reduction in speed when it comes to debugging and understanding the code.
+
+The alternative approach for which I'm advocating reduces the scope of the stimulus controller, focusing only on supporting interactivity. This approach pushes the responsibility of managing state to a form, something that rails is well designed to handle. This approach was inspired by the Stimulus Handbook chapter on [managing state](https://stimulus.hotwired.dev/handbook/managing-state).
+
+I want to also acknowledge the [incredible work of Defne Eroğlu](https://devmuscle.com/blog/react-konva-image-annotation) in helping to inspire this implementation with her great blog post building a similar tool using Konva and ReactJS.
+
+#### Next post
+
+In the next post of this series, we will start building the image annotation app.
+
+<div style="display: flex; justify-content: flex-end; width: 100%; background-color: #52606D; padding: 0.5rem;">
+  <a href="../canvas_on_rails_2">
+    <span style="font-size:1.6rem; padding-right: 1rem;">Next Post</span>
+  </a>
+</div>

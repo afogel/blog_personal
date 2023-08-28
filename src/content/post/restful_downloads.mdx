@@ -1,0 +1,72 @@
+---
+title: RESTful routes are still quite powerful
+excerpt: Are RESTful routes still a useful abstraction when we have other options?
+image: https://images.unsplash.com/photo-1521575363954-393ae1439d33?&auto=format&fit=crop&w=500&q=60
+publishDate: 2023-01-15T00:00:00Z
+tags:
+  - web development
+  - rails
+---
+
+**TL;DR:** Even though it may seem obvious, RESTful API design can still be an incredibly versatile and flexible architecture. It merits remembering that controllers conforming to this design are capable of responding with multiple types of representations for a given resource request, allowing us to maintain parsimonious mental models for organizing business logic.
+
+### How do I RESTfully download?
+
+I was recently chatting with my friend Christian about Ruby on Rails and how I've been enjoying its maturity and stability. I mentioned that one aspect I've been particularly enjoying is using REST as a guiding priniciple to write my APIs.
+
+Christian mentioned to me that it seems like a lot of JS frameworks are moving away from writing RESTful APIs, replacing them with other options like graphQL or gRPC. One explanation for reaching for these alternatives may be that some requests, like `sign_in`, don't cleanly map to a given CRUD action for a resource. I hesitantly agreed with Christian, though seeing a `sign_in` action modeled as a new `Session` conceptually has made sense to me ever since I first encountered that pattern.
+
+Still, with Christian's words echoing through my head, I sat down today to write a bit of code and was _almost_ stumped while trying to design a RESTful Rails endpoint for downloading a resource.
+
+In vanilla Rails, I've gotten used to thinking about our controllers being responsible for only serving either the resource's HTML (i.e., a partial) or a JSON, or if you've hotwired your app, perhaps a Turbo Stream. So...what happens if my controllers are already set up to serve partials but I also want to download a resource as, perhaps, a YAML file?
+
+### MIME-types to the rescue
+
+As I mentioned above, Rails controllers let us respond to different MIME-types like `html`, `json`, or `turbo_stream`s. I realized that the act of downloading a course is just like requesting that resource, only this time in a different format than one of the existing MIME-types that I'm used to (e.g. `html` or `json`).
+
+What this means is that rather than needing to define a custom action and route, I should be able to send a GET request to an existing controller with a different `content-type`.
+
+Since I want to download a YAML file, I'll need to set the `content-type` to `text/yaml`.
+
+To get this to work, I'll need to do a few things --
+First, the MIME-type needs to be registered with Rails:
+
+```ruby
+# config/initializers/mime_types.rb
+
+Mime::Type.register "text/yaml", :yaml
+```
+
+In my case, I was requesting a `Course`.
+
+So, in my `courses/show.html.erb` page, I could simply add a new `link_to` url helper:
+
+```ruby
+# app/views/courses/show.html.erb
+
+<%= link_to t("download"), course_path(@course, format: :yaml) %>
+```
+
+Finally, in my controller, I'm able to leverage the Rails `ActionController#send_data`[^1] method to efficiently stream this request from my `CourseController#show` action:
+
+```ruby
+# app/controllers/courses_controller.rb
+
+class CoursesController < ApplicationController
+  before_action :set_course, only: [:show, :edit, :update, :destroy]
+  ...
+  def show
+    respond_to do |format|
+      format.html
+      format.yaml { send_data @course.to_yaml_file, type: "text/yaml", disposition: "attachment" }
+    end
+  end
+  ...
+end
+```
+
+### So what?
+
+I know this blog post isn't an earth-shattering revelation. Frankly, this approach feels quite obvious to me in retrospect. I imagine that graphQL, gRPC, and other approaches may still have significant benefits that perhaps I'm not fully appreciating. That said, remembering the purpose behind RESTful API design and trying to return to first principles gave me a renewed appreciation for how powerful an abstraction it remains to this day.
+
+[^1]: I chose to dynamically generate the yaml file by defining an instance method on my `Course` model. However, if the resource you are trying to represent already exists as a file, you can use the [`ActionController#send_file` method](https://api.rubyonrails.org/classes/ActionController/DataStreaming.html) to send it instead.

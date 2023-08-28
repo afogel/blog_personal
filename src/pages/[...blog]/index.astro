@@ -9,7 +9,7 @@ import { getCanonical, getPermalink } from '~/utils/permalinks';
 import { getStaticPathsBlogPost, blogPostRobots } from '~/utils/blog';
 import { findImage } from '~/utils/images';
 
-export async function getStaticPaths () {
+export async function getStaticPaths() {
   return await getStaticPathsBlogPost();
 }
 

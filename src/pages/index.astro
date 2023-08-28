@@ -8,6 +8,7 @@ import CallToAction from '~/components/widgets/CallToAction.astro';
 import Features3 from '~/components/widgets/Features3.astro';
 import Steps from '~/components/widgets/Steps.astro';
 import BlogLatestPosts from '~/components/widgets/BlogLatestPosts.astro';
+import { getBlogPermalink, getPermalink } from '~/utils/permalinks';
 
 const metadata = {
   title: 'Ariel Fogel',
@@ -22,7 +23,23 @@ const metadata = {
         { text: 'Home', href: '#' },
         { text: 'About', href: '#about' },
         { text: 'Resume', href: '#resume' },
-        { text: 'Blog', href: '#blog' },
+        {
+          text: 'Blog',
+          links: [
+            {
+              text: 'Blog List',
+              href: getBlogPermalink(),
+            },
+            {
+              text: 'Web Development',
+              href: getPermalink('web-development', 'tag'),
+            },
+            {
+              text: 'Learning',
+              href: getPermalink('learning', 'tag'),
+            },
+          ],
+        },
         { text: 'Github', href: 'https://github.com/afogel' },
       ]}
       actions={[
@@ -50,11 +67,7 @@ const metadata = {
     </Fragment>
   </Hero>
 
-  <BlogLatestPosts
-    id="blog"
-    title="Explore my insightful articles on my blog"
-    information={`Dive into a realm of design wisdom and creative inspiration, where you'll find invaluable insights, practical tips, and captivating narratives that elevate and enrich your creative journey.`}
-  >
+  <BlogLatestPosts id="blog" title="Cold, Medium, and Hot Takes">
     <Fragment slot="bg">
       <div class="absolute inset-0 bg-blue-50 dark:bg-transparent"></div>
     </Fragment>
@@ -71,12 +84,12 @@ const metadata = {
   >
     <Fragment slot="content">
       <h3 class="text-2xl font-bold tracking-tight dark:text-white sm:text-3xl mb-2">About me</h3>
-      <p>I'm a passionate!</p>
-      <br />
       <p>
-        I find inspiration in the world around me, whether through the pages of a captivating novel, the intricate
-        details of typography, or the vibrant hues of nature during my outdoor escapades.
+        Professionally, I spend time thinking about web development, learning, and design. This space is houses my
+        thoughts on these topics, among others.
       </p>
+      <br />
+      <p>When I'm not working, I'm practicing yoga, cooking, or playing jazz.</p>
       <br />
     </Fragment>
 
@@ -84,6 +97,17 @@ const metadata = {
       <div class="absolute inset-0 bg-blue-50 dark:bg-transparent"></div>
     </Fragment>
   </Content>
+
+  <!-- CallToAction Widget *********** -->
+
+  <CallToAction
+    title="Let's create together"
+    subtitle="Ready to transform your vision into deployed products?"
+    callToAction={{
+      text: 'Hire me',
+      href: '/',
+    }}
+  />
 
   <!-- Steps Widget ****************** -->
   <Steps
@@ -165,58 +189,77 @@ const metadata = {
   <!-- Features3 Widget ************** -->
 
   <Features3
-    title="Skills"
-    subtitle="Discover the proficiencies that allow me to bring imagination to life through design."
-    columns={3}
+    title="Languages"
+    columns={4}
     defaultIcon="tabler:point-filled"
     items={[
       {
-        title: 'Graphic design',
-        description: 'Proficient in crafting visually appealing designs that convey messages effectively.',
+        title: 'Ruby',
       },
       {
-        title: 'Branding and identity',
-        description: 'Skilled at developing cohesive brand identities, including logos and brand guidelines.',
+        title: 'Javascript',
       },
       {
-        title: 'User-centered design',
-        description: 'Experienced in creating user-friendly interfaces and optimizing user experiences.',
+        title: 'Typescript',
       },
       {
-        title: 'Adobe Creative Suite',
-        description: 'Skilled in using Photoshop, Illustrator, and InDesign to create and edit visual elements.',
+        title: 'HTML/CSS',
       },
       {
-        title: 'Typography',
-        description: 'Adept in selecting and manipulating typefaces to enhance design aesthetics.',
+        title: 'SQL',
       },
       {
-        title: 'Color theory',
-        description: 'Proficient in using color to evoke emotions and enhance visual harmony.',
+        title: 'Python',
       },
       {
-        title: 'Print and digital design',
-        description: 'Knowledgeable in designing for both print materials and digital platforms.',
+        title: 'R',
       },
       {
-        title: 'Attention to detail',
-        description: 'Diligent in maintaining precision and quality in all design work.',
-      },
-      {
-        title: 'Adaptability',
-        description: 'Quick to adapt to new design trends, technologies, and client preferences.',
+        title: 'Elixir',
       },
     ]}
   />
-
-  <!-- CallToAction Widget *********** -->
-
-  <CallToAction
-    title="Let's create together"
-    subtitle="Ready to transform your vision into captivating designs?"
-    callToAction={{
-      text: 'Hire me',
-      href: '/',
-    }}
+  <Features3
+    title="Technologies"
+    columns={4}
+    defaultIcon="tabler:point-filled"
+    items={[
+      {
+        title: 'Rails',
+      },
+      {
+        title: 'React',
+      },
+      {
+        title: 'Tailwind',
+      },
+      {
+        title: 'Figma',
+      },
+      {
+        title: 'Balsamiq',
+      },
+      {
+        title: 'Sinatra',
+      },
+      {
+        title: 'PIXI.js / Konva.js',
+      },
+      {
+        title: 'Flask',
+      },
+      {
+        title: 'NextJS',
+      },
+      {
+        title: 'Astro',
+      },
+      {
+        title: 'PostGresQL',
+      },
+      {
+        title: 'Heroku / DigitalOcean / Hetzner',
+      },
+    ]}
   />
 </Layout>
