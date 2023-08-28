@@ -1,0 +1,127 @@
+---
+import { blogCategoryRobots, getStaticPathsBlogCategory } from '~/utils/blog';
+
+import Layout from '~/layouts/PageLayout.astro';
+import Steps from '~/components/widgets/Steps.astro';
+
+export async function getStaticPaths({ paginate }) {
+  return await getStaticPathsBlogCategory({ paginate });
+}
+
+const metadata = {
+  title: `Publications`,
+  robots: {
+    index: blogCategoryRobots?.index,
+    follow: blogCategoryRobots?.follow,
+  },
+};
+---
+
+<Layout metadata={metadata}>
+  <Steps
+    id="2022"
+    title="Publications"
+    items={[
+      {
+        title:
+          '<p class="text-md">Fogel, A., Swart, M., Grondin, M., & Nathan, M. (2023). Pose Detection: Towards Ubiquitous Embodied Interventions. In <em>Proceedings of the International Conference of the Learning Sciences 2023</em></p>',
+        icon: 'tabler:article',
+      },
+      {
+        title:
+          '<p class="text-md">Fogel, A., Swart, M., Grondin, M., Xia, F., Schenck, K., & Nathan, M. (2023). Scaffolding the Conceptual Salience of Directed Actions. In <em>Proceedings of the International Conference of the Learning Sciences 2023</em></p>',
+        icon: 'tabler:article',
+      },
+      {
+        title:
+          '<p class="text-md">Fogel, A., Swart, M. I., Grondin, M., &amp; Nathan, M. J. (2022). Grounding Embodied Learning using online motion-detection in The Hidden Village. In Iyer, S. et al. (Eds.), <em>Proceedings of the 30th International Conference on Computers in Education</em>. Asia-Pacific Society for Computers in Education.</p>',
+        icon: 'tabler:article',
+      },
+      {
+        title:
+          '<p class="text-md">Donegan, S. R., Porter, C., Fogel, A., Seo, J., Choi, S., &amp; Eagan, B. (2021, February). US Media Coverage During COVID-19: An Epistemic Network Analysis of Bias, Topic, and Trajectory. In <em>International Conference on Quantitative Ethnography: Conference Proceedings Supplement</em> (p. 43).</p>',
+        icon: 'tabler:article',
+      },
+      {
+        title:
+          '<p class="text-md">Fogel, A., Swiecki, Z., Marquart, C., Cai, Z., Wang, Y., Brohinsky, J., Siebert-Evenstone, A., Eagan, B., Ruis, A.R., &amp; Shaffer, D. W. (2021, February). Directed epistemic network analysis. In <em>International Conference on Quantitative Ethnography (pp. 122-136)</em>. Springer, Cham.</p>',
+        description: 'Winner - Best Student Paper',
+        icon: 'tabler:award',
+      },
+      {
+        title:
+          '<p class="text-md">Fogel, A., Swart, M. I., Scianna, J., Berland, M., &amp; Nathan, M. J. (2021). Design for Remote Embodied Learning: The Hidden Village-Online. In M. M. T. Rodrigo (Ed.), <em>Proceedings of the 29th International Conference on Computers in Education</em>. Asia-Pacific Society for Computers in Education.</p>',
+        icon: 'tabler:article',
+      },
+      {
+        title:
+          '<p class="text-md">Siebert-Evenstone, A., Swiecki, Z., Eagan, B., Sung, H., Brohinsky, J., Fogel, A., Wang, Y., &amp; Shaffer, D. W. (2019, January). Zone It! A mobile application for practice-and place-based learning. In Learning Sciences Graduate Student Conference.</p>',
+        icon: 'tabler:article',
+      },
+      {
+        title:
+          "<p class='text-md'>Zuckerman, S., Holahan, J., Long, S. K., Goin, D., Karpman, M., &amp; Fogel, A. (2016). Pre-Reform Health Care Access and Affordability within the ACA's Medicaid Target Population. <em>Urban Institute Health Policy Center Report.</em></p>",
+        icon: 'tabler:notebook',
+      },
+      {
+        title:
+          '<p class="text-md">Blavin, F., Hempstead, K., Karpman, M., &amp; Fogel, A. (2016). How the Currently Uninsured Perceive the Cost and Affordability of Health Insurance Coverage. <em>Urban Institute Health Policy Center Report.</em></p>',
+        icon: 'tabler:notebook',
+      },
+      {
+        title:
+          "<p class='text-md'>Holahan, J., Zuckerman, S., Long, S. K., Goin, D., Karpman, M., &amp; Fogel, A. (2016). Pre-Reform Access and Affordability for the ACA's Subsidy-Eligible Population. <em>Urban Institute Health Policy Center Report.</em></p>",
+        icon: 'tabler:notebook',
+      },
+      {
+        title:
+          '<p class="text-md">Holahan, J., Zuckerman, S., Long, S. K., Goin, D., Karpman, M., &amp; Fogel, A. (2016). Access and Affordability on the Verge of Health Reform. <em>Urban Institute Health Policy Center Report.</em></p>',
+        icon: 'tabler:notebook',
+      },
+      {
+        title:
+          '<p class="text-md">McMorrow, S., Long, S. K., &amp; Fogel, A. (2015). Primary care providers ordered fewer preventive services for women with Medicaid than for women with private coverage. <em>Health Affairs</em>, 34(6), 1001-1009.</p>',
+        icon: 'tabler:article',
+      },
+      {
+        title:
+          '<p class="text-md">Long, S. K., Stockley, K., Dahlen, H., &amp; Fogel, A. (2014). How Will Employers Respond to National Health Reform?. <em>Working and Living in the Shadow of Economic Fragility</em>, 82.</p>',
+        icon: 'tabler:book',
+      },
+      {
+        title:
+          '<p class="text-md">Holahan, J., Kenney, G. M., Karpman, M., &amp; Fogel, A. (2014). Looking Behind Opinion Polling on the Affordable Care Act. <em>Urban Institute Health Policy Center Report.</em></p>',
+        icon: 'tabler:notebook',
+      },
+      {
+        title:
+          '<p class="text-md">Long, S. K., &amp; Fogel, A. (2014). Health insurance coverage and health care access, use, and affordability in Massachusetts: an update as of Fall 2012. <em>Blue Cross Blue Shield of Massachusetts Foundation.</em></p>',
+        icon: 'tabler:article',
+      },
+      {
+        title:
+          '<p class="text-md">Long, S. K., Nordahl, K. W., Walsch, K. K., Hempstead, K., &amp; Fogel, A. (2014). Health Insurance Coverage Is Just The First Step: Findings From Massachusetts. <em>Health Affairs Blog</em>. <a href="https://doi.org/10.1377/forefront.20140326.038035">https://doi.org/10.1377/forefront.20140326.038035</a></p>',
+        icon: 'tabler:article',
+      },
+    ]}
+    classes={{ container: 'max-w-3xl' }}
+  />
+
+  <!-- Steps Widget ****************** -->
+
+  <Steps
+    id="resume"
+    title="Education"
+    items={[
+      {
+        title: `Master of Fine Arts in Graphic Design <br /> <span class="font-normal">New York University's School of Design</span> <br /> <span class="text-sm font-normal">2018 - 2020</span>`,
+        icon: 'tabler:school',
+      },
+      {
+        title: `Bachelor of Arts in Graphic Design <br /> <span class="font-normal">New York University's School of Design</span> <br /> <span class="text-sm font-normal">2014 - 2018</span>`,
+        icon: 'tabler:school',
+      },
+    ]}
+    classes={{ container: 'max-w-3xl' }}
+  />
+</Layout>

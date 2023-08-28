@@ -1,3 +1,10 @@
+export interface Link {
+  text?: string;
+  href?: string;
+  ariaLabel?: string;
+  icon?: string;
+}
+
 export interface Post {
   /** A unique ID number that identifies a post. */
   id: string;
@@ -264,6 +271,7 @@ export interface Steps extends Headline, Widget {
   callToAction?: string | CallToAction;
   image?: string | Image;
   isReversed?: boolean;
+  links: Array<Link>;
 }
 
 export interface Content extends Headline, Widget {
