@@ -24,7 +24,7 @@ How is it possible that they can infer a) how to handle building a path, and b) 
 
 TL;DR: if an object defines `delegate :persisted?, :to_model, to:` an object that inherits behavior from `ActiveModel::Model` or inherits behavior from `ActiveModel::Model` itself, the `form_with` method can effectively figure out the resource name, action, and, if needed, the resource ID.
 
-This can be particularly useful if you are leveraging the Form Object Pattern to build complex forms that either don't map directly to a single resource/route or that you work like to coerce to map to a particular resources routes.
+This can be particularly useful if you are passing an instance of a form object that doesn't inherit from `ActiveRecord::Base` into a form helper.
 
 ### The Deep Dive
 
