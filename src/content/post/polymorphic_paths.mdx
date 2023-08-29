@@ -22,7 +22,7 @@ Have you ever wondered how `form_with` helpers function?
 
 How is it possible that they can infer a) how to handle building a path, and b) whether the path should be to create a new instance or update an existing instance?
 
-TL;DR: if an object inherits behavior from `ActiveModel::Model` or defines `delegate :persisted?, :to_model, to:` an instance that inherits behavior from `ActiveModel::Model`, the `form_with` method can effectively figure out the resource name, action, and, if needed, the resource ID.
+TL;DR: if an object defines `delegate :persisted?, :to_model, to:` an object that inherits behavior from `ActiveModel::Model` or inherits behavior from `ActiveModel::Model` itself, the `form_with` method can effectively figure out the resource name, action, and, if needed, the resource ID.
 
 This can be particularly useful if you are leveraging the Form Object Pattern to build complex forms that either don't map directly to a single resource/route or that you work like to coerce to map to a particular resources routes.
 
