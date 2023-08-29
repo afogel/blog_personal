@@ -10,7 +10,7 @@ site:
 metadata:
   title:
     default: Ariel Fogel
-    template: '%s — AstroWind'
+    template: '%s'
   description: "\U0001F680 Ariel Fogel's professional website."
   robots:
     index: true
