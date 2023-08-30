@@ -1,0 +1,74 @@
+---
+title: Dealing with Direct Upload Attachments in Tests
+excerpt: How should we test those attachments?
+image: https://images.unsplash.com/photo-1546410531-bb4caa6b424d?auto=format&fit=crop&w=900&q=60
+publishDate: 2023-08-30T00:00:00Z
+category: Documentation
+tags:
+  - web development
+  - rails
+  - factory bot
+  - direct uploads
+  - active storage
+metadata:
+  canonical: https://fogel.dev/testing_direct_uploads
+---
+
+I was recently building a feature for the [Agency of Learning](https://agencyoflearning.com/) where I was working with ActiveSupport to add an attachment to a model. In my implementation, I used direct uploads to first upload the attachment to s3, then submit the form with the signed ID.
+
+Direct uploads are totally magic. You pass a hashmap containing the attachment name as the key, and the `signed_id` as the value and ActiveSupport handles the attachment for you.
+
+For example, say I have a Resume model with an attached resume:
+
+```ruby
+# app/models/resume.rb
+class Resume < ApplicationRecord
+  belongs_to :user
+  has_one_attached :resume
+
+  validates :resume, content_type: ['application/pdf']
+end
+```
+
+Attaching and persisting the blob to an instance of `Resume` is straightforward.
+
+```ruby
+params = { resume: uploaded_resume_signed_id }
+# let's assume I have a User in my database, and a `User` `has_many :resumes`
+User.last.resumes.create!(params)
+```
+
+When it came time to test the service object I built, I wanted to mimic the contract that my method calls would be expecting as close as possible.
+
+In our testing stack, we're not leaning heavily on minitest and fixtures. Instead, we're using FactoryBot and Rspec. This means that [the fixtures approach to testing these attachments](https://guides.rubyonrails.org/active_storage_overview.html#testing) prescribed in the official Ruby on Rails guides don't quite fit the way we write our tests.
+
+As a result, I thought I'd try to figure out a quick/simple way to generate the signed ID for the valid Blob that the ActiveRecord model is expecting. One solution? Leveraging the [`ActiveStorage::Blob.create_and_upload!`](https://api.rubyonrails.org/v7.0.7.2/classes/ActiveStorage/Blob.html#method-c-create_and_upload-21) method.
+
+Here's a snippet of the spec I wrote:
+
+```ruby
+# resumes_update_spec.rb
+let(:user) { create(:user) }
+let(:uploaded_resume_signed_id) do
+  ActiveStorage::Blob.create_and_upload!(
+    io: Rails.root.join('spec/fixtures/bob_resume.pdf').open,
+    filename: 'bob_resume.pdf',
+    content_type: 'application/pdf'
+  ).signed_id
+end
+let(:params) do
+  ActionController::Parameters.new({
+    profile: {
+      resume: uploaded_resume_signed_id,
+    }
+  }).require(:profile).permit(:resume)
+end
+
+it 'associates the resume with the user' do
+  expect { Resumes::Update.new(user:, params:).call! }.to change {
+    user.resumes.count
+  }.by(1)
+end
+```
+
+Hopefully this post helps save you some time if you find yourself in a similar situation in the future!
