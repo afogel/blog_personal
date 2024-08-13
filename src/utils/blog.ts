@@ -161,13 +161,12 @@ export const findLatestPosts = async ({ count }: { count?: number }): Promise<Ar
   return posts ? posts.slice(0, _count) : [];
 };
 
-/** */
 export const getStaticPathsBlogList = async ({ paginate }) => {
   if (!isBlogEnabled || !isBlogListRouteEnabled) return [];
   return paginate(await fetchPosts(), {
     params: { blog: BLOG_BASE || undefined },
     pageSize: blogPostsPerPage,
-  });
+  }).flat();
 };
 
 /** */
@@ -178,7 +177,7 @@ export const getStaticPathsBlogPost = async () => {
       blog: post.permalink,
     },
     props: { post },
-  }));
+  })).flat();
 };
 
 /** */
@@ -200,7 +199,7 @@ export const getStaticPathsBlogCategory = async ({ paginate }) => {
         props: { category },
       }
     )
-  );
+  ).flat();
 };
 
 /** */
@@ -222,5 +221,5 @@ export const getStaticPathsBlogTag = async ({ paginate }) => {
         props: { tag },
       }
     )
-  );
+  ).flat();
 };
