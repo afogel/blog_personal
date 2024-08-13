@@ -172,12 +172,14 @@ export const getStaticPathsBlogList = async ({ paginate }) => {
 /** */
 export const getStaticPathsBlogPost = async () => {
   if (!isBlogEnabled || !isBlogPostRouteEnabled) return [];
-  return (await fetchPosts()).map((post) => ({
-    params: {
-      blog: post.permalink,
-    },
-    props: { post },
-  })).flat();
+  return (await fetchPosts())
+    .map((post) => ({
+      params: {
+        blog: post.permalink,
+      },
+      props: { post },
+    }))
+    .flat();
 };
 
 /** */
@@ -190,16 +192,18 @@ export const getStaticPathsBlogCategory = async ({ paginate }) => {
     typeof post.category === 'string' && categories.add(post.category.toLowerCase());
   });
 
-  return Array.from(categories).map((category: string) =>
-    paginate(
-      posts.filter((post) => typeof post.category === 'string' && category === post.category.toLowerCase()),
-      {
-        params: { category: category, blog: CATEGORY_BASE || undefined },
-        pageSize: blogPostsPerPage,
-        props: { category },
-      }
+  return Array.from(categories)
+    .map((category: string) =>
+      paginate(
+        posts.filter((post) => typeof post.category === 'string' && category === post.category.toLowerCase()),
+        {
+          params: { category: category, blog: CATEGORY_BASE || undefined },
+          pageSize: blogPostsPerPage,
+          props: { category },
+        }
+      )
     )
-  ).flat();
+    .flat();
 };
 
 /** */
@@ -212,14 +216,16 @@ export const getStaticPathsBlogTag = async ({ paginate }) => {
     Array.isArray(post.tags) && post.tags.map((tag) => tags.add(tag.toLowerCase()));
   });
 
-  return Array.from(tags).map((tag: string) =>
-    paginate(
-      posts.filter((post) => Array.isArray(post.tags) && post.tags.find((elem) => elem.toLowerCase() === tag)),
-      {
-        params: { tag: tag, blog: TAG_BASE || undefined },
-        pageSize: blogPostsPerPage,
-        props: { tag },
-      }
+  return Array.from(tags)
+    .map((tag: string) =>
+      paginate(
+        posts.filter((post) => Array.isArray(post.tags) && post.tags.find((elem) => elem.toLowerCase() === tag)),
+        {
+          params: { tag: tag, blog: TAG_BASE || undefined },
+          pageSize: blogPostsPerPage,
+          props: { tag },
+        }
+      )
     )
-  ).flat();
+    .flat();
 };

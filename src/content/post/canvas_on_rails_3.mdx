@@ -34,9 +34,11 @@ If you'd like to skip the tutorial and view just the final Stimulus controller, 
 In the last post, we built up the foundation for our annotation app. In this post, we'll finish building the annotation feature, including responding to click events and persisting the annotations across new page loads.
 
 ### Drawing on the Canvas
+
 Here's where we get into the meat of the implementation. In order to draw on top of our image, we'll need to define a polygon and add it to the stage. We'll also need to handle click events on our canvas so that, when the user clicks on the canvas, it draws a new segment of the line.
 
 ### Add a Group and Polygon
+
 First, let's add a `Konva.Group` and [`Konva.Line`](https://konvajs.org/docs/shapes/Line_-_Polygon.html) objects to our stage. The `Konva.Group` will hold all the objects we eventually draw to the canvas atop the image, and the `Konva.Line` object will act as a multiple-pointed line which can be turned into a closed polygon. At the end of our `connect()` function, after we declare the image, we'll add the following code.
 
 ```js
@@ -55,13 +57,14 @@ First, let's add a `Konva.Group` and [`Konva.Line`](https://konvajs.org/docs/sha
       id: 'annotation',
       name: 'polygon',
     });
-    
+
     this.group.add(this.polygon);
   }
 ```
+
 [see project at this point in history](https://github.com/afogel/ror_canvas_toy_app/tree/817900fa1004b260434fd1d42a4d248dff334172)
 
-Now, you might notice that nothing has changed if you refreshed your page. That's because we didn't provide the `Konva.Line` any instructions about the coordinates of the line segments. 
+Now, you might notice that nothing has changed if you refreshed your page. That's because we didn't provide the `Konva.Line` any instructions about the coordinates of the line segments.
 
 **This is where we find one of the key differences between the StimulusJS implementation and other Javascript framework approaches.**
 
@@ -70,6 +73,7 @@ Now, you might notice that nothing has changed if you refreshed your page. That'
 Since we try to push state management to the DOM when we use Stimulus, our StimulusJS controller is going to read and write the landmark data (i.e., the data for our polygon's line segments) from a `<input type="hidden">` element.
 
 In our form, make sure that you've added the following line towards the end of your form:
+
 ```ruby
 # app/views/annotation_editor/raw_images/_form.html.erb
     ...
@@ -79,10 +83,11 @@ In our form, make sure that you've added the following line towards the end of y
 ```
 
 Likewise, in our stimulus controller, make sure that you've added `'landmarks'` to your array of `static targets`:
+
 ```js
 // app/javascript/controllers/annotation_canvas_controller.js
 export default class extends Controller {
-  static targets = ['canvas', 'landmarks']; 
+  static targets = ['canvas', 'landmarks'];
 
   ...
 }
@@ -95,6 +100,7 @@ _Since we're storing the data in a hidden field, we can persist the data stored 
 ### Drawing Lines on the Canvas
 
 To finish hotwiring up our canvas, introduce some interactivity, and add a new line segment when we click on the canvas, we'll need to:
+
 1. Read any existing landmark data from our `hidden_field`
 2. Add the click event's (x,y) coordinates on the canvas to data that we read from the `hidden_field`
 3. Redraw the polygon's points
@@ -117,6 +123,7 @@ This function first grabs the `landmarksTarget.value`, which is an Array of (x,y
 **2. Add the click event's (x,y) coordinates on the canvas to data that we read from the `hidden_field`**
 
 For this step, we need to first add a function to our Stimulus controller to handle a click event on our canvas and hotwire that function to the DOM. In our stimulus controller, let's add the following function:
+
 ```js
 // app/javascript/controllers/annotation_canvas_controller.js
 handleClick() {
@@ -131,10 +138,11 @@ handleClick() {
 This `handleClick` function grabs the existing points, extracts the pointer's (x,y) coordinates at the time of the click, appends those coordinates to the existing array of points, and writes the new array to the form's `hidden_field`.
 
 To actually hook this up, though, we need to add the following data attribute on the same element that is our `canvas` target:
+
 ```diff
 # app/views/annotation_editor/raw_images/_form.html.erb
 
-<div 
+<div
   style="height: 70vh;"
   id="annotation-container"
   data-annotation-canvas-target="canvas"
@@ -167,7 +175,7 @@ drawAnnotation() {
   this.polygon.points(this.getCurrentPoints({ flattened: true }));
   this.group.destroyChildren();
   this.group.add(this.polygon);
-  // We have to explicitly call `this.polygon.draw()` for the polygon 
+  // We have to explicitly call `this.polygon.draw()` for the polygon
   // to be painted to the canvas.
   this.polygon.draw();
 
@@ -176,13 +184,15 @@ drawAnnotation() {
   this.group.moveToTop();
 }
 ```
+
 [see project at this point in history](https://github.com/afogel/ror_canvas_toy_app/commit/731f568b6700df4d3bcf2536764bc8138a3cf3b8)
 
-The `drawAnnotation` function updates the `points` attribute of the polygon and then paints the updated `polygon` to the canvas. 
+The `drawAnnotation` function updates the `points` attribute of the polygon and then paints the updated `polygon` to the canvas.
 
 ### Clearing the Canvas
 
 Let's also add a feature that allows us to reset what we've drawn on the canvas. First, we'll need to add a `reset` function that sets the value of our `landmarksTarget` to an empty array and redraws the annotation:
+
 ```js
 // app/javascript/controllers/annotation_canvas_controller.js
 reset() {
@@ -196,17 +206,18 @@ And to hotwire it up to our DOM, let's add a new button to our form and include 
 ```ruby
 # app/views/annotation_editor/raw_images/_form.html.erb
 ...
-<div class="btn btn-primary btn-lg my-4" 
+<div class="btn btn-primary btn-lg my-4"
       style="--bs-btn-padding-x: 3rem; --bs-btn-padding-y: 0.25rem;"
       data-action="pointerdown->annotation-canvas#reset"
     >
-  <i class="bi-trash fas my-4" id="save"></i> 
+  <i class="bi-trash fas my-4" id="save"></i>
 </div>
 <%= form.button class: "btn btn-primary btn-lg my-4", style:"--bs-btn-padding-x: 3rem; --bs-btn-padding-y: 0.25rem;" do %>
-  <i class="bi-save fas" id="save"></i> 
+  <i class="bi-save fas" id="save"></i>
 <% end %>
 ...
 ```
+
 [see project at this point in history](https://github.com/afogel/ror_canvas_toy_app/tree/4a86d745cb56788da9ae4504eb977e8d39133904)
 
 ### Persisting the Annotation
@@ -215,7 +226,7 @@ Finally, let's persist the annotations to the server. Because our landmark data 
 
 ```ruby
 # app/controllers/annotation_editor/raw_images_controller.rb
-  
+
   def show
     ...
     @annotation = Annotation.find_by(
@@ -223,7 +234,7 @@ Finally, let's persist the annotations to the server. Because our landmark data 
       label: @label
     ) || Annotation.new
   end
-  
+
   def update
     @annotation = Annotation.find_by(
       raw_image: @raw_image,
@@ -246,6 +257,7 @@ Then, to load the saved annotations, we can populate the `hidden_field` with the
 
 <%= form.hidden_field :landmarks, data: { annotation_canvas_target: 'landmarks'}, value: "#{@annotation.landmarks || []}" %>
 ```
+
 [see project at this point in history](https://github.com/afogel/ror_canvas_toy_app/tree/d31ebab5f654461f044dd2beaec76eaad09e37cc)
 
 #### Next post

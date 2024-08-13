@@ -29,7 +29,6 @@ If you'd like to skip the tutorial and view just the final Stimulus controller, 
 
 </div>
 
-
 ### Modeling the domain
 
 [In the last post](../canvas_on_rails_1), I provided a bit of context as to how and why This first part of the walkthrough starts from a basic template and builds out the core domain that we'll need in order to prepare to build the interactive canvas feature.
@@ -37,6 +36,7 @@ If you'd like to skip the tutorial and view just the final Stimulus controller, 
 At each stepping point, I will include a link to the corresponding commit in the github repo so you can reference the state of the app at that point in the development process.
 
 ### Installation
+
 For the sake of this proof-of-concept, we'll start with a new app. Both because of the convenience and I love all that he does, I'll be using the jumpstart template written by [Chris Oliver](https://gorails.com). You can follow along by starting a new rails app using the jumpstart template by running the following code snippet on the command line:
 
 ```bash
@@ -59,23 +59,28 @@ As I mentioned before, the goal of this app is to draw and persist annotations d
 Since an image can contain multiple different animals we would like to label, we will model the relationship between these three models as a many-to-many relationship, with the `Annotation` acting as a join table between `Label`s and `RawImage`s.
 
 I generated my `Label` scaffold using the following command on the command line:
+
 ```bash
 bundle exec rails g scaffold Label name:string kind:string
 ```
+
 [see project at this point in history](https://github.com/afogel/ror_canvas_toy_app/tree/ea886bb0a3a995b02addf8d0aafca77ecfa56bae)
 
 And the `RawImage` scaffold using the following command on the command line:
+
 ```bash
 bundle exec rails g scaffold RawImage image:attachment
 ```
 
 As a quick aside, make sure that the image processing gem is uncommented in your `Gemfile`.
+
 ```ruby
 # Gemfile
 gem "image_processing", "~> 1.2"
 ```
 
 Just to make it easier to make sure that the images will show, I also updated the RawImage `show.html.erb` file to actually display the photo using an `image_tag`.
+
 ```ruby
 # app/views/raw_images/show.html.erb
 
@@ -86,9 +91,11 @@ Just to make it easier to make sure that the images will show, I also updated th
 ```
 
 To create the `Annotation` model that joins our `Label` and `RawImage` models, I ran the following.
+
 ```bash
 rails g model Annotation label:references raw_image:references landmarks:jsonb
 ```
+
 Note that the model also has a `landmarks` field, which is a set of (x,y) coordinates. This is how we'll persist the annotations themselves.
 
 One final preparatory step before we're ready to jump into Javascript-land. Since an annotation is created on a particular label/image combination, I created a namespaced `RawImage` controller for serving the pages responsible for creating and editting the annotations by adding the following to my `config/routes.rb`.
@@ -108,6 +115,7 @@ I also created a [new controller](https://github.com/afogel/ror_canvas_toy_app/b
 
 > As an aside, I've included a `seeds.rb` file and some assets that you can use to populate the database with some `RawImage`s and `Label`s.
 > You can seed your database by running the following command on the command line:
+>
 > ```bash
 > bundle exec rails db:seed
 > ```
@@ -117,20 +125,21 @@ I also created a [new controller](https://github.com/afogel/ror_canvas_toy_app/b
 Now that we've got the boilerplate code out of the way, let's move forward on building out the interactivity. Before we can even start to build out interactivity, though, we need to attach the canvas to the DOM and use it to display the `RawImage` we'd like to use!
 
 You'll notice that the boilerplate I've provided we don't even have a `<canvas>` element that shows up in our form. That's because the KonvaJS library inserts the `<canvas>` node into a container when the library is first invoked. So, in order to use Konva, let's first generate our stimulus controller on the command line:
+
 ```bash
 rails g stimulus annotation-canvas-controller
 ```
 
 [see project at this point in history](https://github.com/afogel/ror_canvas_toy_app/tree/7982c3c6a10e98be94aab56170bf3fb60630b234)
 
-After generating the stimulus controller's boilerplate code, we have to [hook up our stimulus controller using the `data-controller` HTML attribute](https://github.com/afogel/ror_canvas_toy_app/blob/87f7bfa11a4c400687d5d181f83b3c97b1db05bb/app/views/annotation_editor/raw_images/_form.html.erb#L16). 
+After generating the stimulus controller's boilerplate code, we have to [hook up our stimulus controller using the `data-controller` HTML attribute](https://github.com/afogel/ror_canvas_toy_app/blob/87f7bfa11a4c400687d5d181f83b3c97b1db05bb/app/views/annotation_editor/raw_images/_form.html.erb#L16).
 
 Additionally, we first need to add the container node to our `_form.html.erb`.
 
 ```diff
 # app/views/annotation_editor/raw_images/_form.html.erb
 - <%= image_tag @raw_image.image.variant(:large), class: "rounded" %>
-+  <div 
++  <div
 +     style="height: 70vh;"
 +     id="annotation-container"
 +     data-annotation-canvas-target="canvas"
@@ -138,11 +147,12 @@ Additionally, we first need to add the container node to our `_form.html.erb`.
 ```
 
 In our stimulus controller, we can pass the the `annotation-container` ID to Konva when we instantiate it:
+
 ```js
 // app/javascript/controllers/annotation_canvas_controller.js
 import Konva from 'konva';
 
-export default class extends Controller { 
+export default class extends Controller {
   static targets = ['canvas'];
   connect() {
     this.stage = new Konva.Stage({
@@ -158,6 +168,7 @@ export default class extends Controller {
   }
 }
 ```
+
 [see project at this point in history](https://github.com/afogel/ror_canvas_toy_app/tree/2015f54edd12360c98d79c85c59be60fe04407f6)
 
 Notice that we added the `data-annotation-canvas-target="canvas"` and declared `static targets = ['canvas'];` in our stimulus controller. By adding these lines to our two files, we are able to interact with the DOM element we just added to our form using `this.canvasTarget`. This also means that we can access the container's `clientWidth` and `clientHeight` in order to dictate the width and height of our canvas.
@@ -199,14 +210,14 @@ The last thing we need in order to paint an image to the now-mounted `<canvas>` 
 ```ruby
 # app/views/annotation_editor/raw_images/_form.html.erb
 <div class="d-flex flex-column"
-    data-controller="annotation-canvas" 
-    data-annotation-canvas-image-url-value=<%= url_for(raw_image.image) %> 
+    data-controller="annotation-canvas"
+    data-annotation-canvas-image-url-value=<%= url_for(raw_image.image) %>
     id="annotation-controller">
 ```
+
 [see project at this point in history](https://github.com/afogel/ror_canvas_toy_app/tree/ac6118328d0e10e3f148d4ad7480d00a830ac547)
 
-
-> A quick note about the options we passed to the `Konva.Image`. The coordinate system of the Canvas starts in the top-left corner of the canvas, with coordinates of (0,0), and increasing values get closer to the bottom right corner of the canvas. 
+> A quick note about the options we passed to the `Konva.Image`. The coordinate system of the Canvas starts in the top-left corner of the canvas, with coordinates of (0,0), and increasing values get closer to the bottom right corner of the canvas.
 >
 > So when we create the `new Konva.Image`, we're telling Konva that we want the image to start in the top left corner of the canvas and cover the entire canvas, all the way to the bottom right corner.
 

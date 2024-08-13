@@ -67,10 +67,9 @@ When using a single MutationObserver approach, there's a significant risk of tri
 // This approach could trigger duplicate events
 const observer = new MutationObserver((mutations) => {
   for (let mutation of mutations) {
-    if (hasAssistantAttribute(mutation.target) &&
-        !mutation.target.classList.contains("result-streaming")) {
+    if (hasAssistantAttribute(mutation.target) && !mutation.target.classList.contains('result-streaming')) {
       const text = mutation.target.innerText.trim();
-      postMessage(text, "assistant");
+      postMessage(text, 'assistant');
       // Notice: No observer.disconnect() here
     }
   }
@@ -96,9 +95,9 @@ On the other hand, if we try to use a single observer and disconnect it after pr
 const observer = new MutationObserver((mutations) => {
   for (let mutation of mutations) {
     if (hasAssistantAttribute(mutation.target)) {
-      if (!mutation.target.classList.contains("result-streaming")) {
+      if (!mutation.target.classList.contains('result-streaming')) {
         const text = mutation.target.innerText.trim();
-        postMessage(text, "assistant");
+        postMessage(text, 'assistant');
         observer.disconnect(); // This is the problem!
       }
     }
@@ -144,10 +143,7 @@ First, we need a reliable way to identify which nodes in the DOM represent assis
 
 ```javascript
 const hasAssistantAttribute = (node) => {
-  return (
-    node.nodeType === Node.ELEMENT_NODE &&
-    node.getAttribute("data-message-author-role") === "assistant"
-  );
+  return node.nodeType === Node.ELEMENT_NODE && node.getAttribute('data-message-author-role') === 'assistant';
 };
 ```
 
@@ -163,15 +159,12 @@ function observeForRemovalOfStreamingClass(node) {
 
   const observer = new MutationObserver((mutations) => {
     for (let mutation of mutations) {
-      if (
-        mutation.type === "attributes" &&
-        mutation.attributeName === "class"
-      ) {
+      if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
         const currentClasses = node.classList;
-        if (!currentClasses.contains("result-streaming") && isStreaming) {
+        if (!currentClasses.contains('result-streaming') && isStreaming) {
           isStreaming = false;
           const text = node.innerText.trim();
-          postMessage(text, "assistant");
+          postMessage(text, 'assistant');
           observer.disconnect();
         }
       }
@@ -180,7 +173,7 @@ function observeForRemovalOfStreamingClass(node) {
 
   observer.observe(node, {
     attributes: true,
-    attributeFilter: ["class"],
+    attributeFilter: ['class'],
     subtree: true,
   });
 
@@ -198,8 +191,8 @@ Finally, we set up the main observer that watches for new assistant messages:
 function setupMutationObserver() {
   const observer = new MutationObserver((mutations) => {
     for (let mutation of mutations) {
-      if (mutation.type === "attributes") {
-        // hasAssistantAttribute() identifies the attribute in question, like 
+      if (mutation.type === 'attributes') {
+        // hasAssistantAttribute() identifies the attribute in question, like
         // node.getAttribute("data-message-author-role") === "assistant"
         if (hasAssistantAttribute(mutation.target)) {
           observeForRemovalOfStreamingClass(mutation.target);
@@ -210,7 +203,7 @@ function setupMutationObserver() {
 
   observer.observe(document.body, {
     attributes: true,
-    attributeFilter: ["data-message-author-role", "class"],
+    attributeFilter: ['data-message-author-role', 'class'],
     subtree: true,
   });
 }

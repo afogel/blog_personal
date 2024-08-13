@@ -31,11 +31,12 @@ If you'd like to skip the tutorial and view just the final Stimulus controller, 
 
 #### Conclusion
 
-Using the approach laid out in these blog posts, we're able to keep with the spirit of using "sprinkles of Javascript" to make our server-rendered HTML "sparkle". Delegating state management to the DOM and canvas manipulation/interactivity to our Stimulus controllers provides clear guidelines for how to separate concerns for different functionality. The approach lets each language/technology perform the role for which they are berst suited, and has an added benefit of minimizing the amount of Javascript, and arguably complexity, necessary to achieve the desired result. 
+Using the approach laid out in these blog posts, we're able to keep with the spirit of using "sprinkles of Javascript" to make our server-rendered HTML "sparkle". Delegating state management to the DOM and canvas manipulation/interactivity to our Stimulus controllers provides clear guidelines for how to separate concerns for different functionality. The approach lets each language/technology perform the role for which they are berst suited, and has an added benefit of minimizing the amount of Javascript, and arguably complexity, necessary to achieve the desired result.
 
 **While the Rails controller provides a RESTful approach to working with our resources, `RawImage` and `Label`, in a particular context, the StimulusJS controller is focused on handling click events to read/write data stored in the DOM and presenting those data visually.**
 
 ##### Exercises for the reader
+
 You didn't think that this was as far as the journey goes, did you? There are a ton of additional other features that can, and probably should, be added in order to bring this idea to working production state. These include:
 
 - persisting a scaled version of the annotation, regardless of the canvas size
@@ -179,7 +180,7 @@ export default class extends Controller {
   }
 
   getCurrentPoints({ flattened } = { flattened: false }) {
-    const points = JSON.parse(this.landmarksTarget.value)
+    const points = JSON.parse(this.landmarksTarget.value);
     if (flattened) return points.reduce((a, b) => a.concat(b), []);
     return points;
   }
@@ -209,7 +210,7 @@ export default class extends Controller {
 # app/views/annotation_editor/raw_images/_form.html.erb
 
 <%= form_with(
-  model: [:annotation_editor, label, raw_image], 
+  model: [:annotation_editor, label, raw_image],
   class: 'd-flex flex-column page-header',
 ) do |form| %>
   <% if raw_image.errors.any? %>
@@ -223,8 +224,8 @@ export default class extends Controller {
       </ul>
     </div>
   <% end %>
-  <div class="d-flex flex-column " data-controller="annotation-canvas" 
-    data-annotation-canvas-image-url-value=<%= url_for(raw_image.image) %> 
+  <div class="d-flex flex-column " data-controller="annotation-canvas"
+    data-annotation-canvas-image-url-value=<%= url_for(raw_image.image) %>
     id="annotation-controller">
       <div class='d-flex flex-row justify-content-between'>
         <div id="image-carousel">
@@ -245,18 +246,18 @@ export default class extends Controller {
             <i class="bi-chevron-right fas my-5" id="next-image"></i>
           <% end %>
         </div>
-        <div class="btn btn-primary btn-lg my-4" 
+        <div class="btn btn-primary btn-lg my-4"
              style="--bs-btn-padding-x: 3rem; --bs-btn-padding-y: 0.25rem;"
              data-action="pointerdown->annotation-canvas#reset"
             >
-          <i class="bi-trash fas my-4" id="save"></i> 
+          <i class="bi-trash fas my-4" id="save"></i>
         </div>
 
         <%= form.button class: "btn btn-primary btn-lg my-4", style:"--bs-btn-padding-x: 3rem; --bs-btn-padding-y: 0.25rem;" do %>
-          <i class="bi-save fas" id="save"></i> 
+          <i class="bi-save fas" id="save"></i>
         <% end %>
       </div>
-       <div 
+       <div
           style="height: 70vh;"
           id="annotation-container"
           data-annotation-canvas-target="canvas"
