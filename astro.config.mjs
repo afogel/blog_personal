@@ -78,9 +78,7 @@ export default defineConfig({
     remarkPlugins: [readingTimeRemarkPlugin],
   },
 
-  experimental:{
-    assets: true
-  },
+  experimental:{},
 
   vite: {
     resolve: {
