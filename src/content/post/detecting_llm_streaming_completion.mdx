@@ -1,6 +1,6 @@
 ---
 title: Detecting Completion of LLM Streaming Responses
-excerpt: A robust vanilla JavaScript solution for detecting when streaming responses from Large Language Models have completed
+excerpt: A vanilla JavaScript solution for detecting when streaming responses from Large Language Models have completed
 publishDate: 2024-08-13T00:00:00Z
 image: https://images.unsplash.com/photo-1643780668909-580822430155?q=80&w=2664&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D
 category: Web Development
@@ -11,10 +11,10 @@ tags:
   - Streaming
   - web development
 metadata:
-  canonical: https://fogel.dev/detecting_llm_streaming_completion
+  canonical:
 ---
 
-# Detecting Completion of LLM Streaming Responses: A Robust Vanilla JavaScript Solution
+# Detecting Completion of LLM Streaming Responses: A Vanilla JavaScript Solution
 
 ## Introduction
 
@@ -41,27 +41,51 @@ The key challenge lies in creating a solution that can:
 3. Perform an action exactly once when the streaming is complete.
 4. Handle multiple simultaneous streaming responses without interference.
 
-To address these requirements, we need a two-stage approach using the MutationObserver API.
-
-Certainly. I'll refine the section, maintaining the tone while smoothing out the content and removing the emphasis on the scope of observation. Here's the revised version:
+To address these requirements, we need a two-stage approach using the `MutationObserver` API.
 
 ## The Crucial Role of the Two-Stage Approach
 
-After breaking down our implementation, it's important to understand why we use a two-stage approach with separate observers, rather than a single MutationObserver. This design choice is crucial for the reliability and efficiency of our solution.
+After breaking down our implementation, it's important to understand why we use a two-stage approach with separate observers, rather than a single `MutationObserver`. This design choice is crucial for the reliability and efficiency of our solution.
 
 ### Why Not Use a Single Observer?
 
-You might wonder: "Why can't we just use one MutationObserver to watch for both new messages and the completion of streaming?" It's a valid question, and understanding the answer reveals key insights about how MutationObserver works and the challenges of LLM streaming responses.
+You might wonder: "Why can't we just use one `MutationObserver` to watch for both new messages and the completion of streaming?" It's a valid question, and understanding the answer reveals key insights about how `MutationObserver` works and the challenges of LLM streaming responses.
 
 1. **Granularity of Actions**: We need to perform specific actions (like capturing the full text) for each individual message when it completes streaming. A single observer would make it difficult to associate actions with specific messages.
 
 2. **Timing of Disconnection**: We need to stop observing each message node once its streaming is complete. With a single observer, we can't selectively stop watching one node while continuing to watch for new messages.
 
-3. **Preventing Duplicate Events**: This is a crucial point that deserves special attention. Let's explore it further.
+3. **Preventing Duplicate Events**: This is a crucial point that deserves special attention. Let's explore it further with two examples.
+
+### The Problem with Premature Disconnection
+
+To prevent duplicate events and unnecessary processing, we need to stop observing a message node once its streaming is complete. However, with a single observer, attempting to disconnect after processing a message leads to significant issues. Let's look at what happens when we try to disconnect the observer after processing a message:
+
+```javascript
+// This approach would NOT work correctly
+const observer = new MutationObserver((mutations) => {
+  for (let mutation of mutations) {
+    if (hasAssistantAttribute(mutation.target)) {
+      if (!mutation.target.classList.contains('result-streaming')) {
+        const text = mutation.target.innerText.trim();
+        postMessage(text, 'assistant');
+        observer.disconnect(); // This is the problem!
+      }
+    }
+  }
+});
+
+observer.observe(document.body, { attributes: true, subtree: true });
+```
+
+The issue here is that `observer.disconnect()` would stop the entire observation process. This means:
+
+1. We'd miss any new assistant messages that appear after the first one completes.
+2. If multiple messages are streaming simultaneously, we'd only process the first one to finish.
 
 ### The Pitfall of Duplicate Events
 
-When using a single MutationObserver approach, there's a significant risk of triggering duplicate events. This can happen if we don't properly manage when to stop observing a specific message node. Consider this scenario:
+On the other hand, if we don't disconnect the observer at all in an attempt to keep watching for new messages, we risk triggering duplicate events. Consider this scenario:
 
 ```javascript
 // This approach could trigger duplicate events
@@ -86,49 +110,24 @@ In this case, the observer continues to watch for mutations even after the strea
 
 3. **Performance Impact**: Continuously observing nodes that no longer need observation can impact performance, especially in chat-like interfaces where many messages accumulate over time.
 
-### The Problem with Premature Disconnection
-
-On the other hand, if we try to use a single observer and disconnect it after processing a message, we encounter a different set of problems:
-
-```javascript
-// This approach would NOT work correctly
-const observer = new MutationObserver((mutations) => {
-  for (let mutation of mutations) {
-    if (hasAssistantAttribute(mutation.target)) {
-      if (!mutation.target.classList.contains('result-streaming')) {
-        const text = mutation.target.innerText.trim();
-        postMessage(text, 'assistant');
-        observer.disconnect(); // This is the problem!
-      }
-    }
-  }
-});
-
-observer.observe(document.body, { attributes: true, subtree: true });
-```
-
-The issue here is that `observer.disconnect()` would stop the entire observation process. This means:
-
-1. We'd miss any new assistant messages that appear after the first one completes.
-2. If multiple messages are streaming simultaneously, we'd only process the first one to finish.
+By using separate observers for detecting new messages and monitoring individual message streaming, we can avoid these pitfalls and create a more robust solution.
 
 ### The Two-Stage Solution
 
-Our two-stage approach addresses these issues by using two types of observers:
+To address these issues, we can implement a two-stage approach using separate observers:
 
 1. A main observer that continuously watches for new messages.
 2. Individual observers for each message that monitor for the completion of streaming.
 
-This design allows us to:
+This design offers several advantages:
 
-- Continuously detect new messages as they appear in the DOM.
-- Independently track and process each streaming message.
-- Avoid duplicate event triggers by disconnecting individual message observers once streaming is complete.
-- Handle multiple simultaneous streaming messages without interference.
+- It keeps an eye out for new messages at all times.
+- It tracks each streaming message separately.
+- It stops watching a message once it's done, avoiding repeat processing.
 
-By implementing this two-stage approach, we create a robust system that efficiently handles the dynamic nature of LLM interfaces, where new messages can appear at any time and multiple messages might be streaming simultaneously. It provides a clean solution to the challenges of both premature disconnection and the risk of duplicate event triggering, ensuring our interface remains responsive and accurate.
+By implementing this two-stage approach, we create a robust system that efficiently handles the dynamic nature of these streaming interfaces. It provides a solution that addresses the challenges of premature disconnection while guaranteeing that any side effects triggered once the streamed response ends happen **exactly once**.
 
-## Implementing the Two-Stage MutationObserver Solution
+## Implementing the Two-Stage `MutationObserver` Solution
 
 Our solution involves two types of observers working in concert:
 
@@ -137,21 +136,9 @@ Our solution involves two types of observers working in concert:
 
 Let's break down the implementation into its key components:
 
-### Step 1: Identifying Assistant Messages
+### Step 1: Observing Individual Assistant Messages
 
-First, we need a reliable way to identify which nodes in the DOM represent assistant messages:
-
-```javascript
-const hasAssistantAttribute = (node) => {
-  return node.nodeType === Node.ELEMENT_NODE && node.getAttribute('data-message-author-role') === 'assistant';
-};
-```
-
-This function checks if a given DOM node represents an assistant message by looking for a specific attribute. This allows us to focus only on relevant nodes, improving the efficiency of our observation.
-
-### Step 2: Observing Individual Assistant Messages
-
-Next, we create a function to observe each assistant message for the completion of streaming:
+First, we create a function to observe each assistant message for the completion of streaming:
 
 ```javascript
 function observeForRemovalOfStreamingClass(node) {
@@ -181,19 +168,18 @@ function observeForRemovalOfStreamingClass(node) {
 }
 ```
 
-This function creates a new MutationObserver for a specific assistant message node. It watches for changes to the `class` attribute, captures the complete message text when the `result-streaming` class is removed, and ensures the action is only performed once per message. After processing the message, it disconnects the observer to clean up resources.
+This function creates a new `MutationObserver` for a specific assistant message node. It watches for changes to the `class` attribute, captures the complete message text when the `result-streaming` class is removed, and ensures the action is only performed once per message. After processing the message, it disconnects the observer to clean up resources.
 
-### Step 3: Setting Up the Main Observer
+### Step 2: Setting Up the Main Observer
 
-Finally, we set up the main observer that watches for new assistant messages:
+Next, we set up the main observer that watches for new assistant messages:
 
 ```javascript
 function setupMutationObserver() {
   const observer = new MutationObserver((mutations) => {
     for (let mutation of mutations) {
       if (mutation.type === 'attributes') {
-        // hasAssistantAttribute() identifies the attribute in question, like
-        // node.getAttribute("data-message-author-role") === "assistant"
+        // hasAssistantAttribute() is a utility function that identifies the attribute in question
         if (hasAssistantAttribute(mutation.target)) {
           observeForRemovalOfStreamingClass(mutation.target);
         }
@@ -213,29 +199,21 @@ This main observer watches the entire document body for attribute changes. When 
 
 ## The Power of This Approach
 
-This two-stage approach offers several advantages:
+This two-stage approach offers two key advantages:
 
-1. **Handling Multiple Simultaneous Responses**: By creating individual observers for each message, we can handle multiple streaming responses concurrently without interference.
+1. **Flexibility**: The solution is not tied to specific timing or length of responses, relying instead on DOM changes. This makes it adaptable to various LLM behaviors.
 
-2. **Flexibility**: The solution is not tied to specific timing or length of responses, relying instead on DOM changes. This makes it adaptable to various LLM behaviors.
+2. **Precise Control**: We can perform actions on completed responses without risk of duplication or missing events.
 
-3. **Lightweight and Non-Intrusive**: Implemented in vanilla JavaScript, this solution doesn't interfere with the normal operation of the LLM interface and doesn't require heavy frameworks.
+## Added Considerations
 
-4. **Precise Control**: We can perform actions on completed responses without risk of duplication or missing events.
+While our solution is robust for most scenarios, there are some added considerations to keep in mind:
 
-## Advanced Considerations
+1. **Performance Optimization**: For applications with a high volume of messages, implement a cleanup strategy to remove observers for old messages.
 
-While our solution is robust for most scenarios, there are some advanced considerations to keep in mind:
+2. **Customization**: The current solution assumes specific class names and attributes. Adjust these based on the particular LLM interface you're working with.
 
-1. **Race Conditions**: In rare cases, the streaming might complete before we set up our individual observer. To handle this, consider checking the class immediately after setting up the observer.
-
-2. **Performance Optimization**: For applications with a high volume of messages, implement a cleanup strategy to remove observers for old messages.
-
-3. **Error Handling**: Implement error handling to manage unexpected DOM structures or changes gracefully.
-
-4. **Customization**: The current solution assumes specific class names and attributes. Adjust these based on the particular LLM interface you're working with.
-
-5. **Targeted Observation**: Consider observing only the chat message container instead of the entire document body to improve efficiency.
+3. **Targeted Observation**: Consider observing only the chat message container instead of the entire document body to improve efficiency.
 
 ## Conclusion
 
