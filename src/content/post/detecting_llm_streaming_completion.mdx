@@ -186,7 +186,7 @@ function setupMutationObserver() {
 }
 ```
 
-This main observer watches the entire document body for attribute changes. When it detects a new node with the assistant attribute, it creates a new observer for that specific node. It continues to run, catching any new assistant messages that appear in the DOM. 
+This main observer watches the entire document body for attribute changes. When it detects a new node with the assistant attribute, it creates a new observer for that specific node. It continues to run, catching any new assistant messages that appear in the DOM.
 
 The `class` attribute filter ensures that changes related to message streaming status are detected. This is critical for identifying when the `result-streaming` class is added or removed in the the `mutation.target`'s children nodes (for a side-note, you may be wondering why we didn't observe).
 
