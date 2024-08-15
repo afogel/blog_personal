@@ -4,7 +4,7 @@ import { SITE_CONFIG, METADATA_CONFIG, APP_BLOG_CONFIG } from '~/utils/config';
 import { fetchPosts } from '~/utils/blog';
 import { getPermalink } from '~/utils/permalinks';
 
-export const get = async () => {
+export const GET = async () => {
   if (!APP_BLOG_CONFIG.isEnabled) {
     return new Response(null, {
       status: 404,
