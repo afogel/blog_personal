@@ -1,0 +1,167 @@
+---
+publishDate: 2024-08-26T00:00:00Z
+title: Sane Python Debugging in VSCode
+excerpt: A path towards a more reasonable dev experience
+image: https://images.unsplash.com/photo-1456024569359-9e78b5d10a80?auto=format&fit=crop&w=2069&q=80
+category: Tutorial
+tags:
+  - Python
+  - package management
+  - version management
+  - vscode
+  - debugging
+  - dependency conflicts
+  - dev environment
+---
+
+# Python in VSCode: An escape from dependency conflict hell to a smooth debugging experience
+
+I don't know about you, but one of the things I've found most maddening about working with Python is how package management works. I got spoiled, coming from the world of Ruby -- `bundler` just always seemed to work. Hell, even working with the dreaded `node_modules` is less painful than debugging dependency conflicts in Python.
+
+I've been using VS Code for the past few years and I've been impressed by the IDE experience/the ability to set breakpoints easily. That said, even when I get package management working on the CLI, I've had to contend with going back to print debugging at times because I couldn't get VSCode to launch with all the necessary dependencies.
+
+No more.
+
+If you're tired of dealing with a terrible, complicated, and broken system of managing dependencies across tools that don't integrate easily together, if you're tired of not knowing how to setup your `launch.json` so that you can easily activate an interactive debugging session, or both, this post is for you.
+
+For the purposes of this tutorial, we'll cover how you can start a `fastapi` server, but you can imagine substituting this for any other command that is run by prefixing the command with `poetry run`.
+
+## The Holy Trinity: asdf, poetry, and VSCode
+
+The proposed approach consists of three tools:
+
+1. [**asdf**](https://asdf-vm.com/): A version manager for multiple languages
+2. [**poetry**](https://python-poetry.org/): A dependency management and packaging tool for Python
+3. **VSCode**: Standard Bearer code editor turned IDE with powerful debugging capabilities. If you know, you know.
+
+### Step 1: Setting up asdf
+
+First, we need to install asdf. I'm using it to manage both Python and poetry versions.
+
+```bash
+# Install asdf
+git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.10.2
+
+# Add asdf to your shell
+echo '. $HOME/.asdf/asdf.sh' >> ~/.bashrc
+echo '. $HOME/.asdf/completions/asdf.bash' >> ~/.bashrc
+source ~/.bashrc
+
+# Install Python plugin
+asdf plugin-add python
+
+# Install the latest Python version
+asdf install python latest
+asdf global python latest
+
+# Install poetry plugin
+asdf plugin-add poetry https://github.com/asdf-community/asdf-poetry.git
+
+# Install the latest poetry version
+asdf install poetry latest
+asdf global poetry latest
+```
+
+The benefit of doing it all with `asdf` is that we now have a consistent method of managing both our dependency manager, as well as the different versions of the language.
+
+We can modify these versions, per-project, using a `.tool-versions` that is saved at the root level of each project.
+For example, in my project, my `.tool-versions` looks like:
+
+```
+python 3.12.5
+poetry 1.8.3
+```
+
+### Step 2: Configuring poetry
+
+Now that we have poetry installed, we need to configure it to create virtual environments within our project directory. This configuration ensures that poetry creates a `.venv` directory inside your project, making it easier for VSCode to find and use the correct virtual environment.
+
+Go ahead and create a `poetry.toml` file in your project root:
+
+```toml
+[virtualenvs]
+in-project = true
+```
+
+### Step 3: Setting up your project
+
+With asdf and poetry configured, we can set up the project:
+
+1. Initialize your project with poetry:
+
+   ```bash
+   poetry init
+   ```
+
+   This will create a `pyproject.toml` file, which is where poetry will manage your project's dependencies.
+
+2. Add your project dependencies:
+
+   ```bash
+   poetry add fastapi
+   poetry add uvicorn
+   ```
+
+   These commands will add FastAPI and Uvicorn to your project and update the `pyproject.toml` file.
+
+### Step 4: Configuring VSCode
+
+By this point, I should be able to start a fastapi server from the command line by running `poetry run fastapi dev app/main.py` (assuming I have a basic fastapi server setup in `app/main.py`).
+
+But I promised a good debugging experience. So, for the pièce de résistance - setting up VSCode for seamless debugging.
+
+Create a `.vscode/launch.json` file in your project root:
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "FastAPI Dev Server",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "fastapi",
+      "args": ["dev", "app/main.py"],
+      "jinja": true,
+      "justMyCode": false,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "envFile": "${workspaceFolder}/app/.env",
+      "python": "${workspaceFolder}/.venv/bin/python"
+    }
+  ]
+}
+```
+
+I think the most important pieces to pay attention to here are the `"module"`, `"args"`, and `"python"` arguments.
+
+The `"python"` argument tells VS Code that it should use the python binary in the virtual environment. It also makes available dependencies that were installed in the virtual environment.
+
+The `"module"` is the actual CLI command that I'm calling. So here, you could swap out `fastapi` for `uvicorn`, or presumably any other module that's available on the CLI.
+
+The `"args"` list represents what should come after the fastapi command.
+Say you wanted to throw additional CLI flags, you'd do it in the `"args"` list.
+
+### Step 5: Running and Debugging
+
+To debug in VSCode:
+
+1. Set your breakpoints in your code.
+2. Press F5 or use the "Run and Debug" sidebar to start the "FastAPI Dev Server" configuration.
+3. VSCode will launch your FastAPI application and pause at your breakpoints, allowing you to step through your code, inspect variables, and debug like a pro.
+
+## The Payoff
+
+By adopting this setup, we've gained several advantages:
+
+1. **Version Consistency**: asdf helps enforce the same Python and poetry versions across contributors machines.
+2. **Dependency Isolation**: poetry creates project-specific virtual environments, preventing conflicts between projects and making it easy to manage dependencies.
+3. **Seamless Debugging**: The VSCode configuration allows for interactive debugging directly from the IDE, no more print statement debugging!
+4. **Reproducibility**: The combination of asdf and poetry makes it trivial to recreate the development environment on any machine.
+
+# Wrapping up
+
+Hopefully making these changes reduce your pain when it comes to dependency conflicts, environment mismatches, and print statement debugging. It certainly reduced mine.
+
+Happy coding!
