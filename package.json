@@ -47,7 +47,7 @@
     "unpic": "^3.10.0"
   },
   "engines": {
-    "node": ">=16.12.0"
+    "node": "22.x"
   },
   "overrides": {
     "@iconify/tools": "^4.0.5"
