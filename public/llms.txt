@@ -1,0 +1,44 @@
+# Ariel Fogel's Blog
+
+> Software engineering insights on Rails development, AI security, and learning sciences from a researcher and practitioner. Covers practical tutorials, security research, and educational methodologies with a focus on Ruby on Rails, LLM safety, and evidence-based learning approaches.
+
+This blog represents the intersection of practical software engineering and academic research. Content ranges from hands-on Rails tutorials to cutting-edge AI security research, including prompt injection analysis and LLM safety considerations. The author brings both industry experience (founding engineer at Pillar Security) and academic background (Masters in Learning Sciences from UW-Madison).
+
+## Content Hubs
+
+- [Rails Development Hub](/hubs/rails-development): Comprehensive Ruby on Rails tutorials, guides, and best practices including the popular "Canvas on Rails" series
+- [AI & Security Hub](/hubs/ai-security): AI security research, LLM safety, prompt injection analysis, and secure development practices  
+- [Research Hub](/hubs/research): Academic research, learning sciences insights, and educational methodology findings
+
+## Key Tutorial Series
+
+- [Canvas on Rails Series](/tags/canvas): 4-part comprehensive guide to HTML5 Canvas integration with Ruby on Rails
+  - [Part 1: Why this approach?](/canvas_on_rails_1)
+  - [Part 2: Setting up the foundation](/canvas_on_rails_2) 
+  - [Part 3: Building interactive features](/canvas_on_rails_3)
+  - [Part 4: Advanced techniques](/canvas_on_rails_4)
+
+## Featured Research & Analysis
+
+- [Anatomy of an Indirect Prompt Injection](/cfs_post): In-depth analysis of prompt injection vulnerabilities in LLM systems
+- [Stream Detection with MutationObserver](/detecting_llm_streaming_completion): JavaScript techniques for tracking LLM response completion
+
+## Categories
+
+- [Tutorials](/categories/Tutorials): Step-by-step technical guides and how-to content
+- [Security](/categories/Security): AI security research and vulnerability analysis
+- [Learning](/categories/Learning): Educational content and learning methodologies
+- [Development](/categories/Development): General software development insights
+- [Documentation](/categories/Documentation): Technical documentation and reference materials
+
+## Popular Topics
+
+- [Rails](/tags/rails): Ruby on Rails development techniques and patterns
+- [Web Development](/tags/web-development): Frontend and full-stack web development
+- [LLM](/tags/LLM): Large Language Model research and applications
+- [AI Security](/tags/ai-security): Artificial intelligence security considerations
+- [JavaScript](/tags/javascript): JavaScript development and utilities
+
+## About the Author
+
+Ariel Fogel is a founding engineer at Pillar Security and holds a Masters in Learning Sciences from UW-Madison. Professional experience spans educational technology, web development, and AI security research. Published work includes security research on AI supply chain vulnerabilities and educational technology design.

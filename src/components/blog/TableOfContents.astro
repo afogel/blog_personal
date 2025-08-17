@@ -1,0 +1,100 @@
+---
+export interface Props {
+  headings: {
+    depth: number;
+    slug: string;
+    text: string;
+  }[];
+}
+
+const { headings } = Astro.props;
+
+// Filter to only show h2 and h3 headings for cleaner TOC
+const filteredHeadings = headings.filter((heading) => heading.depth <= 3);
+---
+
+{
+  filteredHeadings.length > 1 && (
+    <div class="table-of-contents bg-gray-50 dark:bg-gray-800 rounded-lg p-6 mb-8">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">📋 Table of Contents</h3>
+      <nav class="toc-nav">
+        <ul class="space-y-1">
+          {filteredHeadings.map((heading) => (
+            <li class={`toc-level-${heading.depth}`}>
+              <a
+                href={`#${heading.slug}`}
+                class="block py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              >
+                {heading.text}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </div>
+  )
+}
+
+<style>
+  .toc-level-2 {
+    margin-left: 0;
+  }
+  .toc-level-3 {
+    margin-left: 1rem;
+  }
+  .toc-level-4 {
+    margin-left: 2rem;
+  }
+
+  /* Smooth scrolling for anchor links */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Highlight current section */
+  .toc-nav a:target {
+    color: theme('colors.blue.600');
+    font-weight: 500;
+  }
+</style>
+
+<script>
+  // Highlight current section in TOC based on scroll position
+  function updateTOCHighlight() {
+    const headings = document.querySelectorAll('h2[id], h3[id], h4[id]');
+    const tocLinks = document.querySelectorAll('.toc-nav a');
+
+    if (!headings.length || !tocLinks.length) return;
+
+    let current = '';
+
+    headings.forEach((heading) => {
+      const rect = heading.getBoundingClientRect();
+      if (rect.top <= 100) {
+        current = heading.id;
+      }
+    });
+
+    tocLinks.forEach((link) => {
+      link.classList.remove('toc-active');
+      if (link.getAttribute('href') === `#${current}`) {
+        link.classList.add('toc-active');
+      }
+    });
+  }
+
+  // Update on scroll
+  window.addEventListener('scroll', updateTOCHighlight);
+  window.addEventListener('load', updateTOCHighlight);
+</script>
+
+<style is:global>
+  .toc-active {
+    color: theme('colors.blue.600') !important;
+    font-weight: 500 !important;
+  }
+
+  .dark .toc-active {
+    color: theme('colors.blue.400') !important;
+  }
+</style>

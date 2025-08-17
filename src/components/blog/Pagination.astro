@@ -3,32 +3,137 @@ import { Icon } from 'astro-icon/components';
 import { getPermalink } from '~/utils/permalinks';
 
 export interface Props {
-  prevUrl: string;
-  nextUrl: string;
+  prevUrl?: string;
+  nextUrl?: string;
   prevText?: string;
   nextText?: string;
+  page?: {
+    currentPage: number;
+    lastPage: number;
+    url: {
+      prev?: string;
+      next?: string;
+      first?: string;
+      last?: string;
+    };
+  };
 }
 
-const { prevUrl, nextUrl, prevText = 'Newer posts', nextText = 'Older posts' } = Astro.props;
+const { 
+  prevUrl, 
+  nextUrl, 
+  prevText = 'Newer posts', 
+  nextText = 'Older posts',
+  page 
+} = Astro.props;
+
+// Use page object if provided, otherwise fall back to individual URLs
+const currentPage = page?.currentPage || 1;
+const lastPage = page?.lastPage || 1;
+const prevLink = page?.url.prev || prevUrl;
+const nextLink = page?.url.next || nextUrl;
+const firstLink = page?.url.first;
+const lastLink = page?.url.last;
+
+// Generate page numbers to display (show 5 pages around current)
+const generatePageNumbers = () => {
+  const pages = [];
+  const startPage = Math.max(1, currentPage - 2);
+  const endPage = Math.min(lastPage, currentPage + 2);
+  
+  for (let i = startPage; i <= endPage; i++) {
+    // Generate URL for each page
+    let pageUrl;
+    if (i === 1) {
+      pageUrl = '/blog';
+    } else {
+      pageUrl = `/blog/${i}`;
+    }
+    
+    pages.push({
+      number: i,
+      url: pageUrl,
+      isCurrent: i === currentPage
+    });
+  }
+  
+  return pages;
+};
+
+const pageNumbers = generatePageNumbers();
 ---
 
 {
-  (prevUrl || nextUrl) && (
+  (lastPage > 1) && (
     <div class="container flex">
-      <div class="flex flex-row mx-auto container justify-between">
-        <a href={getPermalink(prevUrl)} class={`btn btn-ghost md:px-3 px-3 mr-2 ${!prevUrl ? 'invisible' : ''}`}>
-          <div class="flex flex-row align-middle">
-            <Icon name="tabler:chevron-left" class="w-6 h-6" />
-            <p class="ml-2">{prevText}</p>
-          </div>
-        </a>
-        <a href={getPermalink(nextUrl)} class={`btn btn-ghost md:px-3 px-3 ${!nextUrl ? 'invisible' : ''}`}>
-          <div class="flex flex-row align-middle">
-            <span class="mr-2">{nextText}</span>
-            <Icon name="tabler:chevron-right" class="w-6 h-6" />
-          </div>
-        </a>
-      </div>
+      <nav class="flex flex-row mx-auto container justify-center items-center space-x-2" aria-label="Blog pagination">
+        <!-- First page link -->
+        {firstLink && (
+          <a 
+            href={getPermalink(firstLink)} 
+            class="btn btn-ghost px-3 py-2"
+            aria-label="Go to first page"
+          >
+            <Icon name="tabler:chevrons-left" class="w-5 h-5" />
+          </a>
+        )}
+        
+        <!-- Previous page link -->
+        {prevLink && (
+          <a 
+            href={getPermalink(prevLink)} 
+            class="btn btn-ghost px-3 py-2 mr-2"
+            aria-label={prevText}
+          >
+            <Icon name="tabler:chevron-left" class="w-5 h-5" />
+          </a>
+        )}
+        
+        <!-- Page numbers -->
+        <div class="flex space-x-1">
+          {pageNumbers.map((pageInfo) => (
+            pageInfo.isCurrent ? (
+              <span 
+                class="btn btn-primary px-3 py-2 cursor-default"
+                aria-current="page"
+                aria-label={`Current page, page ${pageInfo.number}`}
+              >
+                {pageInfo.number}
+              </span>
+            ) : (
+              <a 
+                href={getPermalink(pageInfo.url)} 
+                class="btn btn-ghost px-3 py-2"
+                aria-label={`Go to page ${pageInfo.number}`}
+              >
+                {pageInfo.number}
+              </a>
+            )
+          ))}
+        </div>
+        
+        <!-- Next page link -->
+        {nextLink && (
+          <a 
+            href={getPermalink(nextLink)} 
+            class="btn btn-ghost px-3 py-2 ml-2"
+            aria-label={nextText}
+          >
+            <Icon name="tabler:chevron-right" class="w-5 h-5" />
+          </a>
+        )}
+        
+        <!-- Last page link -->
+        {lastLink && (
+          <a 
+            href={getPermalink(lastLink)} 
+            class="btn btn-ghost px-3 py-2"
+            aria-label="Go to last page"
+          >
+            <Icon name="tabler:chevrons-right" class="w-5 h-5" />
+          </a>
+        )}
+      </nav>
     </div>
   )
 }

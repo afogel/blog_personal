@@ -1,0 +1,108 @@
+---
+import { getCollection } from 'astro:content';
+import { Icon } from 'astro-icon/components';
+
+export interface Props {
+  currentSeries: string;
+  currentOrder: number;
+}
+
+const { currentSeries, currentOrder } = Astro.props;
+
+// Get all posts in the same series
+const seriesPosts = await getCollection('post', (entry) => {
+  return entry.data.series === currentSeries;
+});
+
+// Sort by series order
+const sortedPosts = seriesPosts.sort((a, b) => (a.data.seriesOrder || 0) - (b.data.seriesOrder || 0));
+
+const currentIndex = sortedPosts.findIndex(post => post.data.seriesOrder === currentOrder);
+const previousPost = currentIndex > 0 ? sortedPosts[currentIndex - 1] : null;
+const nextPost = currentIndex < sortedPosts.length - 1 ? sortedPosts[currentIndex + 1] : null;
+---
+
+{sortedPosts.length > 1 && (
+  <div class="series-navigation bg-gray-50 dark:bg-gray-800 rounded-lg p-6 mb-8">
+    <div class="mb-4">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+        📚 Series: {currentSeries}
+      </h3>
+      <p class="text-sm text-gray-600 dark:text-gray-400">
+        Part {currentOrder} of {sortedPosts.length}
+      </p>
+    </div>
+
+    <!-- Series Progress Bar -->
+    <div class="mb-4">
+      <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+        <div 
+          class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+          style={`width: ${(currentOrder / sortedPosts.length) * 100}%`}
+        ></div>
+      </div>
+    </div>
+
+    <!-- Navigation Links -->
+    <div class="flex justify-between items-center mb-4">
+      {previousPost ? (
+        <a 
+          href={`/${previousPost.slug}`}
+          class="flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
+        >
+          <Icon name="tabler:chevron-left" class="w-4 h-4 mr-1" />
+          <span class="text-sm">Previous: {previousPost.data.title}</span>
+        </a>
+      ) : (
+        <div></div>
+      )}
+
+      {nextPost ? (
+        <a 
+          href={`/${nextPost.slug}`}
+          class="flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
+        >
+          <span class="text-sm">Next: {nextPost.data.title}</span>
+          <Icon name="tabler:chevron-right" class="w-4 h-4 ml-1" />
+        </a>
+      ) : (
+        <div></div>
+      )}
+    </div>
+
+    <!-- All Posts in Series -->
+    <details class="group">
+      <summary class="cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
+        View all posts in this series
+        <Icon name="tabler:chevron-down" class="w-4 h-4 inline ml-1 group-open:rotate-180 transition-transform" />
+      </summary>
+      <div class="mt-3 space-y-2">
+        {sortedPosts.map((post, index) => (
+          <div class="flex items-center">
+            <span class="text-xs font-mono text-gray-400 mr-2 w-6">
+              {post.data.seriesOrder || index + 1}.
+            </span>
+            {post.data.seriesOrder === currentOrder ? (
+              <span class="text-sm font-medium text-blue-600 dark:text-blue-400">
+                {post.data.title} (current)
+              </span>
+            ) : (
+              <a 
+                href={`/${post.slug}`}
+                class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+              >
+                {post.data.title}
+              </a>
+            )}
+          </div>
+        ))}
+      </div>
+    </details>
+  </div>
+)}
+
+<style>
+  details[open] summary {
+    margin-bottom: 0.5rem;
+  }
+</style>

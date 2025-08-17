@@ -1,0 +1,63 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '~/layouts/PageLayout.astro';
+import BlogList from '~/components/blog/List.astro';
+import { getStaticPaths } from '~/utils/blog';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('post');
+  const tags = new Set();
+
+  posts.forEach((post) => {
+    if (post.data.tags) {
+      post.data.tags.forEach((tag) => tags.add(tag));
+    }
+  });
+
+  return Array.from(tags).map((tag) => ({
+    params: { tag },
+  }));
+}
+
+const { tag } = Astro.params;
+
+const posts = await getCollection('post', (entry) => {
+  return entry.data.draft !== true && entry.data.tags?.includes(tag);
+});
+
+const sortedPosts = posts.sort((a, b) => {
+  return new Date(b.data.publishDate).getTime() - new Date(a.data.publishDate).getTime();
+});
+
+const metadata = {
+  title: `Posts tagged "${tag}"`,
+  description: `All blog posts tagged with ${tag}`,
+};
+---
+
+<Layout metadata={metadata}>
+  <section class="px-4 md:px-6 py-12 sm:py-16 lg:py-20 mx-auto max-w-4xl">
+    <header class="mb-8">
+      <h1 class="text-3xl md:text-4xl font-bold leading-tighter tracking-tighter mb-4 font-heading">
+        Posts tagged with
+        <span class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded text-sm font-mono">
+          {tag}
+        </span>
+      </h1>
+      <p class="text-xl text-muted dark:text-slate-400">
+        {sortedPosts.length}
+        {sortedPosts.length === 1 ? 'post' : 'posts'} found
+      </p>
+    </header>
+
+    {
+      sortedPosts.length > 0 ? (
+        <BlogList posts={sortedPosts} />
+      ) : (
+        <div class="text-center py-12">
+          <p class="text-lg text-muted dark:text-slate-400">No posts found with this tag.</p>
+        </div>
+      )
+    }
+  </section>
+</Layout>

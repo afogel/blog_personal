@@ -31,10 +31,7 @@ import { UI_CONFIG } from '~/utils/config';
     }
   }
 
-  window.onload = function () {
-    let lastKnownScrollPosition = window.scrollY;
-    let ticking = true;
-
+  function initializeEventListeners() {
     attachEvent('#header nav', 'click', function () {
       document.querySelector('[data-aw-toggle-menu]')?.classList.remove('expanded');
       document.body.classList.remove('overflow-hidden');
@@ -94,6 +91,14 @@ import { UI_CONFIG } from '~/utils/config';
       newlink.href = href;
       newlink.click();
     });
+  }
+
+  window.onload = function () {
+    let lastKnownScrollPosition = window.scrollY;
+    let ticking = true;
+
+    // Initialize event listeners
+    initializeEventListeners();
 
     function appyHeaderStylesOnScroll() {
       const header = document.getElementById('header');
@@ -129,4 +134,7 @@ import { UI_CONFIG } from '~/utils/config';
     document.getElementById('header')?.classList.remove('expanded');
     document.querySelector('#header nav')?.classList.add('hidden');
   };
+
+  // Reinitialize event listeners after view transitions
+  document.addEventListener('astro:after-swap', initializeEventListeners);
 </script>

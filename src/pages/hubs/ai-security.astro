@@ -1,0 +1,122 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '~/layouts/PageLayout.astro';
+import BlogList from '~/components/blog/List.astro';
+import { Icon } from 'astro-icon/components';
+
+// Normalization function
+const getNormalizedPost = async (post) => {
+  const { id, slug: rawSlug = '', data } = post;
+  const { Content, remarkPluginFrontmatter } = await post.render();
+
+  const {
+    publishDate: rawPublishDate = new Date(),
+    updateDate: rawUpdateDate,
+    title,
+    excerpt,
+    image,
+    tags: rawTags = [],
+    category: rawCategory,
+    author,
+    draft = false,
+    metadata = {},
+    series,
+    seriesOrder,
+  } = data;
+
+  const slug = rawSlug;
+  const publishDate = new Date(rawPublishDate);
+  const updateDate = rawUpdateDate ? new Date(rawUpdateDate) : undefined;
+  const category = rawCategory;
+  const tags = rawTags;
+
+  return {
+    id: id,
+    slug: slug,
+    permalink: slug,
+    publishDate: publishDate,
+    updateDate: updateDate,
+    title: title,
+    excerpt: excerpt,
+    image: image,
+    category: category,
+    tags: tags,
+    author: author,
+    draft: draft,
+    metadata,
+    Content: Content,
+    readingTime: remarkPluginFrontmatter?.readingTime,
+    series: series,
+    seriesOrder: seriesOrder,
+  };
+};
+
+const aiSecurityCollectionPosts = await getCollection('post', (entry) => {
+  return (
+    entry.data.draft !== true &&
+    (entry.data.tags?.includes('LLM') ||
+      entry.data.category === 'Security' ||
+      entry.data.category === 'AI' ||
+      entry.data.category === 'Models')
+  );
+});
+
+// Normalize the posts
+const normalizedPosts = await Promise.all(aiSecurityCollectionPosts.map((post) => getNormalizedPost(post)));
+
+const sortedPosts = normalizedPosts.sort((a, b) => {
+  return new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime();
+});
+
+const securityPosts = sortedPosts.filter((post) => post.category === 'Security');
+const developmentPosts = sortedPosts.filter(
+  (post) => post.category !== 'Security' && (post.category === 'Development' || post.tags?.includes('LLM'))
+);
+
+const metadata = {
+  title: 'AI & Security Hub',
+  description: 'Insights on AI security, LLM safety, and secure development practices',
+};
+---
+
+<Layout metadata={metadata}>
+  <section class="px-4 md:px-6 py-12 sm:py-16 lg:py-20 mx-auto max-w-4xl">
+    <header class="mb-12 text-center">
+      <div class="mb-4">
+        <Icon name="tabler:shield-lock" class="w-16 h-16 mx-auto text-blue-600" />
+      </div>
+      <h1 class="text-4xl md:text-5xl font-bold leading-tighter tracking-tighter mb-4 font-heading">
+        AI & Security Hub
+      </h1>
+      <p class="text-xl text-muted dark:text-slate-400 max-w-2xl mx-auto">
+        Insights on AI security, LLM safety, prompt injection prevention, and secure development practices.
+      </p>
+    </header>
+
+    <!-- Security Posts -->
+    {
+      securityPosts.length > 0 && (
+        <section class="mb-12">
+          <h2 class="text-2xl font-bold mb-6 flex items-center">
+            <Icon name="tabler:shield" class="w-6 h-6 mr-2 text-red-600" />
+            Security Research
+          </h2>
+          <BlogList posts={securityPosts} />
+        </section>
+      )
+    }
+
+    <!-- Development & LLM Posts -->
+    {
+      developmentPosts.length > 0 && (
+        <section class="mb-12">
+          <h2 class="text-2xl font-bold mb-6 flex items-center">
+            <Icon name="tabler:robot" class="w-6 h-6 mr-2 text-green-600" />
+            AI Development
+          </h2>
+          <BlogList posts={developmentPosts} />
+        </section>
+      )
+    }
+  </section>
+</Layout>

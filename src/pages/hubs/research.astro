@@ -1,0 +1,130 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '~/layouts/PageLayout.astro';
+import BlogList from '~/components/blog/List.astro';
+import { Icon } from 'astro-icon/components';
+
+// Normalization function
+const getNormalizedPost = async (post) => {
+  const { id, slug: rawSlug = '', data } = post;
+  const { Content, remarkPluginFrontmatter } = await post.render();
+
+  const {
+    publishDate: rawPublishDate = new Date(),
+    updateDate: rawUpdateDate,
+    title,
+    excerpt,
+    image,
+    tags: rawTags = [],
+    category: rawCategory,
+    author,
+    draft = false,
+    metadata = {},
+    series,
+    seriesOrder,
+  } = data;
+
+  const slug = rawSlug;
+  const publishDate = new Date(rawPublishDate);
+  const updateDate = rawUpdateDate ? new Date(rawUpdateDate) : undefined;
+  const category = rawCategory;
+  const tags = rawTags;
+
+  return {
+    id: id,
+    slug: slug,
+    permalink: slug,
+    publishDate: publishDate,
+    updateDate: updateDate,
+    title: title,
+    excerpt: excerpt,
+    image: image,
+    category: category,
+    tags: tags,
+    author: author,
+    draft: draft,
+    metadata,
+    Content: Content,
+    readingTime: remarkPluginFrontmatter?.readingTime,
+    series: series,
+    seriesOrder: seriesOrder,
+  };
+};
+
+const researchCollectionPosts = await getCollection('post', (entry) => {
+  return (
+    entry.data.draft !== true &&
+    (entry.data.category === 'Learning' ||
+      entry.data.category === 'Security' ||
+      entry.data.tags?.includes('research') ||
+      entry.data.tags?.includes('scholarly articles') ||
+      entry.data.tags?.includes('security research'))
+  );
+});
+
+// Normalize the posts
+const normalizedPosts = await Promise.all(researchCollectionPosts.map((post) => getNormalizedPost(post)));
+
+const sortedPosts = normalizedPosts.sort((a, b) => {
+  return new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime();
+});
+
+const academicPosts = sortedPosts.filter(
+  (post) =>
+    post.tags?.includes('research') ||
+    post.tags?.includes('scholarly articles') ||
+    post.tags?.includes('perceptual fluency')
+);
+const practicalPosts = sortedPosts.filter(
+  (post) =>
+    !post.tags?.includes('research') &&
+    !post.tags?.includes('scholarly articles') &&
+    !post.tags?.includes('perceptual fluency')
+);
+
+const metadata = {
+  title: 'Research Hub',
+  description: 'Research findings across learning sciences and security domains',
+};
+---
+
+<Layout metadata={metadata}>
+  <section class="px-4 md:px-6 py-12 sm:py-16 lg:py-20 mx-auto max-w-4xl">
+    <header class="mb-12 text-center">
+      <div class="mb-4">
+        <Icon name="tabler:microscope" class="w-16 h-16 mx-auto text-purple-600" />
+      </div>
+      <h1 class="text-4xl md:text-5xl font-bold leading-tighter tracking-tighter mb-4 font-heading">Research Hub</h1>
+      <p class="text-xl text-muted dark:text-slate-400 max-w-2xl mx-auto">
+        Research findings and insights spanning learning sciences and security domains, from academic study to industry
+        applications.
+      </p>
+    </header>
+
+    <!-- Academic Research -->
+    {
+      academicPosts.length > 0 && (
+        <section class="mb-12">
+          <h2 class="text-2xl font-bold mb-6 flex items-center">
+            <Icon name="tabler:school" class="w-6 h-6 mr-2 text-purple-600" />
+            Academic Research
+          </h2>
+          <BlogList posts={academicPosts} />
+        </section>
+      )
+    }
+
+    <!-- Practical Applications -->
+    {
+      practicalPosts.length > 0 && (
+        <section class="mb-12">
+          <h2 class="text-2xl font-bold mb-6 flex items-center">
+            <Icon name="tabler:bulb" class="w-6 h-6 mr-2 text-yellow-600" />
+            Applied Research
+          </h2>
+          <BlogList posts={practicalPosts} />
+        </section>
+      )
+    }
+  </section>
+</Layout>

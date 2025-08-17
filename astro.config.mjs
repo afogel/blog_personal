@@ -70,6 +70,9 @@ export default defineConfig({
     remarkPlugins: [readingTimeRemarkPlugin],
   },
   experimental: {},
+  image: {
+    service: { entrypoint: 'astro/assets/services/noop' },
+  },
   vite: {
     resolve: {
       alias: {
@@ -79,5 +82,6 @@ export default defineConfig({
   },
   adapter: vercel({
     webAnalytics: { enabled: true },
+    runtime: 'nodejs22.x',
   }),
 });

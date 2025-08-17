@@ -55,6 +55,23 @@ const postCollection = defineCollection({
     tags: z.array(z.string()).optional(),
     author: z.string().optional(),
 
+    // Series support
+    series: z.string().optional(),
+    seriesOrder: z.number().optional(),
+
+    // Content metadata
+    prerequisites: z.array(z.string()).optional(),
+    externalLinks: z
+      .array(
+        z.object({
+          title: z.string(),
+          url: z.string().url(),
+          description: z.string().optional(),
+        })
+      )
+      .optional(),
+    featured: z.boolean().optional(),
+
     metadata: metadataDefinition(),
   }),
 });

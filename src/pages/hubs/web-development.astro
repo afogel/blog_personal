@@ -1,0 +1,160 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '~/layouts/PageLayout.astro';
+import BlogList from '~/components/blog/List.astro';
+import { Icon } from 'astro-icon/components';
+
+// Import the utility to normalize posts
+const getNormalizedPost = async (post) => {
+  const { id, slug: rawSlug = '', data } = post;
+  const { Content, remarkPluginFrontmatter } = await post.render();
+
+  const {
+    publishDate: rawPublishDate = new Date(),
+    updateDate: rawUpdateDate,
+    title,
+    excerpt,
+    image,
+    tags: rawTags = [],
+    category: rawCategory,
+    author,
+    draft = false,
+    metadata = {},
+    series,
+    seriesOrder,
+  } = data;
+
+  // Simple slug cleaning
+  const slug = rawSlug;
+  const publishDate = new Date(rawPublishDate);
+  const updateDate = rawUpdateDate ? new Date(rawUpdateDate) : undefined;
+  const category = rawCategory;
+  const tags = rawTags;
+
+  return {
+    id: id,
+    slug: slug,
+    permalink: slug,
+    publishDate: publishDate,
+    updateDate: updateDate,
+    title: title,
+    excerpt: excerpt,
+    image: image,
+    category: category,
+    tags: tags,
+    author: author,
+    draft: draft,
+    metadata,
+    Content: Content,
+    readingTime: remarkPluginFrontmatter?.readingTime,
+    series: series,
+    seriesOrder: seriesOrder,
+  };
+};
+
+const webDevCollectionPosts = await getCollection('post', (entry) => {
+  return (
+    entry.data.draft !== true &&
+    (entry.data.tags?.includes('rails') ||
+      entry.data.tags?.includes('ruby') ||
+      entry.data.tags?.includes('web-development') ||
+      entry.data.tags?.includes('tutorials') ||
+      entry.data.tags?.includes('cultural practices') ||
+      entry.data.category === 'Team Practices')
+  );
+});
+
+// Normalize the posts to the correct format
+const normalizedPosts = await Promise.all(webDevCollectionPosts.map((post) => getNormalizedPost(post)));
+
+const sortedPosts = normalizedPosts.sort((a, b) => {
+  return new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime();
+});
+
+// Group by series
+const seriesMap = new Map();
+const individualPosts = [];
+
+sortedPosts.forEach((post) => {
+  if (post.series) {
+    if (!seriesMap.has(post.series)) {
+      seriesMap.set(post.series, []);
+    }
+    seriesMap.get(post.series).push(post);
+  } else {
+    individualPosts.push(post);
+  }
+});
+
+// Sort series posts by order
+seriesMap.forEach((posts, series) => {
+  seriesMap.set(
+    series,
+    posts.sort((a, b) => (a.seriesOrder || 0) - (b.seriesOrder || 0))
+  );
+});
+
+const metadata = {
+  title: 'Web Development Hub',
+  description: 'Comprehensive collection of web development tutorials, guides, and best practices',
+};
+---
+
+<Layout metadata={metadata}>
+  <section class="px-4 md:px-6 py-12 sm:py-16 lg:py-20 mx-auto max-w-4xl">
+    <header class="mb-12 text-center">
+      <div class="mb-4">
+        <Icon name="tabler:code" class="w-16 h-16 mx-auto text-red-600" />
+      </div>
+      <h1 class="text-4xl md:text-5xl font-bold leading-tighter tracking-tighter mb-4 font-heading">
+        Web Development Hub
+      </h1>
+      <p class="text-xl text-muted dark:text-slate-400 max-w-2xl mx-auto">
+        Comprehensive collection of web development tutorials, guides, and best practices. From Rails and Ruby to team
+        collaboration and development workflows.
+      </p>
+    </header>
+
+    <!-- Series Section -->
+    {
+      Array.from(seriesMap.entries()).length > 0 && (
+        <section class="mb-12">
+          <h2 class="text-2xl font-bold mb-6">Tutorial Series</h2>
+          <div class="space-y-6">
+            {Array.from(seriesMap.entries()).map(([seriesName, posts]) => (
+              <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                <h3 class="text-lg font-semibold mb-3">{seriesName}</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  {posts.length} parts • Start to finish tutorial
+                </p>
+                <div class="space-y-2">
+                  {posts.map((post, index) => (
+                    <div class="flex items-center">
+                      <span class="text-xs font-mono text-gray-400 mr-3 w-6">{post.seriesOrder || index + 1}.</span>
+                      <a
+                        href={`/${post.slug}`}
+                        class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
+                      >
+                        {post.title}
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    <!-- Individual Posts -->
+    {
+      individualPosts.length > 0 && (
+        <section>
+          <h2 class="text-2xl font-bold mb-6">Individual Posts</h2>
+          <BlogList posts={individualPosts} />
+        </section>
+      )
+    }
+  </section>
+</Layout>

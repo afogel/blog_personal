@@ -1,15 +1,12 @@
 ---
 export const prerender = true;
 import Layout from '~/layouts/PageLayout.astro';
-
-import Header from '~/components/widgets/Header.astro';
 import Hero from '~/components/widgets/Hero.astro';
 import Content from '~/components/widgets/Content.astro';
 import CallToAction from '~/components/widgets/CallToAction.astro';
 import Features3 from '~/components/widgets/Features3.astro';
 import Steps from '~/components/widgets/Steps.astro';
 import BlogLatestPosts from '~/components/widgets/BlogLatestPosts.astro';
-import { getBlogPermalink, getPermalink } from '~/utils/permalinks';
 
 const metadata = {
   title: 'Ariel Fogel',
@@ -197,7 +194,7 @@ const metadata = {
       },
     ]}
   />
-  <Features3
+  <!-- <Features3
     title="Technologies"
     columns={4}
     defaultIcon="tabler:point-filled"
@@ -242,5 +239,5 @@ const metadata = {
         title: 'Astro',
       },
     ]}
-  />
+  /> -->
 </Layout>

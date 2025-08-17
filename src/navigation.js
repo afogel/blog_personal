@@ -18,20 +18,12 @@ export const headerData = {
       text: 'Blog',
       links: [
         {
-          text: 'Blog List',
+          text: 'All Posts',
           href: getBlogPermalink(),
         },
         {
-          text: 'AI Security',
-          href: getPermalink('ai-security', 'tag'),
-        },
-        {
-          text: 'Web Development',
-          href: getPermalink('web-development', 'tag'),
-        },
-        {
-          text: 'Learning',
-          href: getPermalink('learning', 'tag'),
+          text: 'Search Posts',
+          href: getPermalink('/search'),
         },
       ],
     },

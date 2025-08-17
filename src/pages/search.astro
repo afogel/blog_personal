@@ -1,0 +1,230 @@
+---
+export const prerender = false; // Enable SSR for search functionality
+
+import { getCollection } from 'astro:content';
+import Layout from '~/layouts/PageLayout.astro';
+import { Icon } from 'astro-icon/components';
+import BlogList from '~/components/blog/List.astro';
+import { getNormalizedPost } from '~/utils/blog';
+
+// Get query parameters
+const url = Astro.url;
+const query = url.searchParams.get('q') || '';
+const category = url.searchParams.get('category') || '';
+const tag = url.searchParams.get('tag') || '';
+const sort = url.searchParams.get('sort') || 'date';
+
+// Get all posts
+const allPosts = await getCollection('post', (entry) => {
+  return entry.data.draft !== true;
+});
+
+const normalizedPosts = await Promise.all(allPosts.map((post) => getNormalizedPost(post)));
+
+// Filter posts based on query parameters
+let filteredPosts = normalizedPosts.filter((post) => {
+  const textMatch =
+    !query ||
+    post.title.toLowerCase().includes(query.toLowerCase()) ||
+    (post.excerpt || '').toLowerCase().includes(query.toLowerCase()) ||
+    (post.tags || []).some((t) => t.toLowerCase().includes(query.toLowerCase()));
+
+  const categoryMatch = !category || post.category === category;
+  const tagMatch = !tag || (post.tags || []).includes(tag);
+
+  return textMatch && categoryMatch && tagMatch;
+});
+
+// Sort posts
+if (sort === 'title') {
+  filteredPosts.sort((a, b) => a.title.localeCompare(b.title));
+} else if (sort === 'relevance' && query) {
+  filteredPosts.sort((a, b) => {
+    const scoreA = a.title.toLowerCase().includes(query.toLowerCase()) ? 2 : 1;
+    const scoreB = b.title.toLowerCase().includes(query.toLowerCase()) ? 2 : 1;
+    return scoreB - scoreA;
+  });
+} else {
+  filteredPosts.sort((a, b) => new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime());
+}
+
+// Get categories and tags for search form
+const allPostsForFilters = await getCollection('post', (entry) => {
+  return entry.data.draft !== true;
+});
+
+// Get top 4 most common categories (keeping both original and normalized)
+const categoryCount = allPostsForFilters.reduce(
+  (acc, post) => {
+    if (post.data.category) {
+      acc[post.data.category] = (acc[post.data.category] || 0) + 1;
+    }
+    return acc;
+  },
+  {} as Record<string, number>
+);
+
+const topCategoriesData = Object.entries(categoryCount)
+  .sort(([, a], [, b]) => b - a)
+  .slice(0, 4)
+  .map(([category]) => ({
+    original: category,
+    normalized: category.toLowerCase().replace(/\s+/g, '-'), // Same as cleanSlug logic
+  }));
+
+// Get tags (keeping both original and normalized)
+const allTags = [...new Set(allPostsForFilters.flatMap((p) => p.data.tags || []))];
+const tagsData = allTags
+  .map((tag) => ({
+    original: tag,
+    normalized: tag.toLowerCase().replace(/\s+/g, '-'), // Same as cleanSlug logic
+  }))
+  .sort((a, b) => a.original.localeCompare(b.original));
+
+const metadata = {
+  title: `Search Results${query ? ` for "${query}"` : ''}`,
+  description: 'Search through all blog posts',
+};
+---
+
+<Layout metadata={metadata}>
+  <section class="px-6 sm:px-6 py-12 sm:py-16 lg:py-20 mx-auto max-w-4xl">
+    <header class="mb-8">
+      <h1 class="text-4xl md:text-5xl font-bold leading-tighter tracking-tighter mb-4 font-heading">Search Posts</h1>
+      {
+        query && (
+          <p class="text-xl text-muted dark:text-slate-400">
+            {filteredPosts.length} result{filteredPosts.length === 1 ? '' : 's'} for "{query}"
+          </p>
+        )
+      }
+    </header>
+
+    <!-- Search Form -->
+    <form method="GET" class="mb-8 space-y-4">
+      <div class="relative">
+        <Icon name="tabler:search" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <input
+          type="text"
+          name="q"
+          value={query}
+          placeholder="Search posts by title or content..."
+          class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+        />
+      </div>
+
+      <div class="flex flex-wrap gap-4">
+        <select
+          name="category"
+          class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-800 dark:text-white"
+        >
+          <option value="">All Categories</option>
+          {
+            topCategoriesData.map((cat) => (
+              <option value={cat.normalized} selected={cat.normalized === category}>
+                {cat.original}
+              </option>
+            ))
+          }
+        </select>
+
+        <select
+          name="tag"
+          class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-800 dark:text-white"
+        >
+          <option value="">All Tags</option>
+          {
+            tagsData.map((t) => (
+              <option value={t.normalized} selected={t.normalized === tag}>
+                {t.original}
+              </option>
+            ))
+          }
+        </select>
+
+        <select
+          name="sort"
+          class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-800 dark:text-white"
+        >
+          <option value="date" selected={sort === 'date'}>Sort by Date</option>
+          <option value="title" selected={sort === 'title'}>Sort by Title</option>
+          <option value="relevance" selected={sort === 'relevance'}>Sort by Relevance</option>
+        </select>
+
+        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+          Search
+        </button>
+
+        {
+          (query || category || tag) && (
+            <a
+              href="/search"
+              class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+            >
+              Clear All
+            </a>
+          )
+        }
+      </div>
+    </form>
+
+    <!-- Results -->
+    {
+      filteredPosts.length === 0 ? (
+        <div class="text-center py-12">
+          <Icon name="tabler:search-off" class="w-16 h-16 mx-auto text-gray-400 mb-4" />
+          <p class="text-lg text-gray-600 dark:text-gray-400">No posts found matching your search criteria.</p>
+          <a
+            href="/blog"
+            class="mt-4 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
+          >
+            View all posts
+          </a>
+        </div>
+      ) : (
+        <BlogList posts={filteredPosts} />
+      )
+    }
+  </section>
+</Layout>
+
+<script>
+  function initSearchDebounce() {
+    const searchInput = document.querySelector('input[name="q"]') as HTMLInputElement;
+    const categorySelect = document.querySelector('select[name="category"]') as HTMLSelectElement;
+    const tagSelect = document.querySelector('select[name="tag"]') as HTMLSelectElement;
+    const sortSelect = document.querySelector('select[name="sort"]') as HTMLSelectElement;
+
+    let debounceTimer: ReturnType<typeof setTimeout>;
+
+    function updateURL() {
+      const params = new URLSearchParams();
+
+      if (searchInput?.value) params.set('q', searchInput.value);
+      if (categorySelect?.value) params.set('category', categorySelect.value);
+      if (tagSelect?.value) params.set('tag', tagSelect.value);
+      if (sortSelect?.value && sortSelect.value !== 'date') params.set('sort', sortSelect.value);
+
+      const newURL = params.toString() ? `/search?${params.toString()}` : '/search';
+      window.location.href = newURL;
+    }
+
+    function debouncedUpdate() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(updateURL, 500);
+    }
+
+    // Add event listeners
+    searchInput?.addEventListener('input', debouncedUpdate);
+    categorySelect?.addEventListener('change', updateURL);
+    tagSelect?.addEventListener('change', updateURL);
+    sortSelect?.addEventListener('change', updateURL);
+  }
+
+  // Initialize when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSearchDebounce);
+  } else {
+    initSearchDebounce();
+  }
+</script>

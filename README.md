@@ -91,13 +91,13 @@ Key configuration files:
 
 ## Development Commands
 
-| Command | Action |
-|---------|--------|
-| `bun run dev` | Start dev server |
-| `bun run build` | Build production site |
-| `bun run preview` | Preview build locally |
-| `bun run format` | Format code with Prettier |
-| `bun run lint:eslint` | Run ESLint |
+| Command               | Action                    |
+| --------------------- | ------------------------- |
+| `bun run dev`         | Start dev server          |
+| `bun run build`       | Build production site     |
+| `bun run preview`     | Preview build locally     |
+| `bun run format`      | Format code with Prettier |
+| `bun run lint:eslint` | Run ESLint                |
 
 ## Content Categories
 
