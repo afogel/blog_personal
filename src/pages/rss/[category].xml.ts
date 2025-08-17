@@ -2,6 +2,8 @@ import type { APIRoute } from 'astro';
 import rss from '@astrojs/rss';
 import { getCollection } from 'astro:content';
 
+export const prerender = true;
+
 export async function getStaticPaths() {
   const posts = await getCollection('post', (entry) => {
     return entry.data.draft !== true;
