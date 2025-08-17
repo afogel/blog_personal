@@ -1,0 +1,117 @@
+---
+import { getCollection } from 'astro:content';
+import { Icon } from 'astro-icon/components';
+
+export interface Props {
+  currentPost: {
+    slug: string;
+    data: {
+      title: string;
+      tags?: string[];
+      category?: string;
+      series?: string;
+    };
+  };
+  maxPosts?: number;
+}
+
+const { currentPost, maxPosts = 3 } = Astro.props;
+
+// Get all published posts except current
+const allPosts = await getCollection('post', (entry) => {
+  return entry.data.draft !== true && entry.slug !== currentPost.slug;
+});
+
+// Calculate relevance score for each post
+const scoredPosts = allPosts.map((post) => {
+  let score = 0;
+
+  // Same series gets highest score
+  if (currentPost.data.series && post.data.series === currentPost.data.series) {
+    score += 10;
+  }
+
+  // Same category gets medium score
+  if (currentPost.data.category && post.data.category === currentPost.data.category) {
+    score += 5;
+  }
+
+  // Shared tags get score based on number of matches
+  if (currentPost.data.tags && post.data.tags) {
+    const sharedTags = currentPost.data.tags.filter((tag) => post.data.tags?.includes(tag));
+    score += sharedTags.length * 2;
+  }
+
+  return { post, score };
+});
+
+// Sort by score and take top posts
+const relatedPosts = scoredPosts
+  .filter((item) => item.score > 0)
+  .sort((a, b) => b.score - a.score)
+  .slice(0, maxPosts)
+  .map((item) => item.post);
+---
+
+{
+  relatedPosts.length > 0 && (
+    <section class="related-posts mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+      <h3 class="text-xl font-semibold mb-6 flex items-center">
+        <Icon name="tabler:link" class="w-5 h-5 mr-2" />
+        Related Posts
+      </h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {relatedPosts.map((post) => (
+          <article class="group">
+            <a
+              href={`/${post.slug}`}
+              class="block p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 transition-colors"
+            >
+              {post.data.image && (
+                <div class="mb-3 overflow-hidden rounded">
+                  <img
+                    src={post.data.image}
+                    alt={post.data.title}
+                    class="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                  />
+                </div>
+              )}
+
+              <h4 class="font-medium text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-2">
+                {post.data.title}
+              </h4>
+
+              {post.data.excerpt && (
+                <p class="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-3">{post.data.excerpt}</p>
+              )}
+
+              <div class="flex flex-wrap gap-2 text-xs">
+                {post.data.category && (
+                  <span class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">
+                    {post.data.category}
+                  </span>
+                )}
+                {post.data.series && (
+                  <span class="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-1 rounded">
+                    Series: {post.data.series}
+                  </span>
+                )}
+              </div>
+            </a>
+          </article>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+<style>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>

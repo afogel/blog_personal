@@ -1,0 +1,142 @@
+---
+import { getCollection } from 'astro:content';
+import { Icon } from 'astro-icon/components';
+
+export interface Props {
+  maxPosts?: number;
+  showTitle?: boolean;
+}
+
+const { maxPosts = 3, showTitle = true } = Astro.props;
+
+// Get featured posts
+const featuredPosts = await getCollection('post', (entry) => {
+  return entry.data.draft !== true && entry.data.featured === true;
+});
+
+// If no explicitly featured posts, use recent high-quality posts
+let postsToShow = featuredPosts;
+if (postsToShow.length === 0) {
+  const allPosts = await getCollection('post', (entry) => {
+    return entry.data.draft !== true;
+  });
+
+  // Prioritize posts with series, good excerpts, or recent posts
+  postsToShow = allPosts
+    .sort((a, b) => {
+      let scoreA = 0;
+      let scoreB = 0;
+
+      // Series posts get bonus
+      if (a.data.series) scoreA += 2;
+      if (b.data.series) scoreB += 2;
+
+      // Posts with excerpts get bonus
+      if (a.data.excerpt) scoreA += 1;
+      if (b.data.excerpt) scoreB += 1;
+
+      // Recent posts get bonus
+      const daysSinceA = (Date.now() - new Date(a.data.publishDate).getTime()) / (1000 * 60 * 60 * 24);
+      const daysSinceB = (Date.now() - new Date(b.data.publishDate).getTime()) / (1000 * 60 * 60 * 24);
+
+      if (daysSinceA < 90) scoreA += 1;
+      if (daysSinceB < 90) scoreB += 1;
+
+      if (scoreA !== scoreB) return scoreB - scoreA;
+
+      // Fall back to date
+      return new Date(b.data.publishDate).getTime() - new Date(a.data.publishDate).getTime();
+    })
+    .slice(0, maxPosts);
+}
+
+postsToShow = postsToShow.slice(0, maxPosts);
+---
+
+{
+  postsToShow.length > 0 && (
+    <section class="featured-posts">
+      {showTitle && (
+        <h2 class="text-2xl font-bold mb-6 flex items-center">
+          <Icon name="tabler:star" class="w-6 h-6 mr-2 text-yellow-500" />
+          Featured Posts
+        </h2>
+      )}
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {postsToShow.map((post) => (
+          <article class="group bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden">
+            {post.data.image && (
+              <div class="relative overflow-hidden">
+                <img
+                  src={post.data.image}
+                  alt={post.data.title}
+                  class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                  loading="lazy"
+                />
+                {post.data.featured && (
+                  <div class="absolute top-3 right-3">
+                    <Icon name="tabler:star-filled" class="w-5 h-5 text-yellow-500" />
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div class="p-6">
+              <div class="flex items-center gap-2 mb-3 text-xs">
+                {post.data.category && (
+                  <span class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">
+                    {post.data.category}
+                  </span>
+                )}
+                {post.data.series && (
+                  <span class="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-1 rounded">
+                    {post.data.series}
+                  </span>
+                )}
+              </div>
+
+              <h3 class="font-semibold text-lg mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                <a href={`/${post.slug}`} class="stretched-link">
+                  {post.data.title}
+                </a>
+              </h3>
+
+              {post.data.excerpt && (
+                <p class="text-gray-600 dark:text-gray-400 text-sm line-clamp-3 mb-4">{post.data.excerpt}</p>
+              )}
+
+              <div class="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                <Icon name="tabler:calendar" class="w-4 h-4 mr-1" />
+                {new Date(post.data.publishDate).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+<style>
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .stretched-link::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1;
+    content: '';
+  }
+</style>
