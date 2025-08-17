@@ -39,6 +39,33 @@
   .btn-primary {
     @apply font-semibold bg-primary text-white border-primary hover:bg-secondary hover:border-secondary hover:text-white dark:text-white dark:bg-primary dark:border-primary dark:hover:border-secondary dark:hover:bg-secondary;
   }
+
+  /* Code block wrapping for better mobile experience */
+  .prose pre {
+    @apply overflow-x-auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+  }
+
+  .prose pre code {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+  }
+
+  .prose code {
+    @apply px-1 py-0.5 rounded text-sm;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+  }
+
+  /* Inline code should wrap more gracefully */
+  .prose :not(pre) > code {
+    white-space: normal;
+    word-break: break-word;
+  }
 }
 
 #header.scroll > div:first-child {

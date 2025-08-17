@@ -1,6 +1,18 @@
 import { getImage } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
-import type { OpenGraph } from '@astrolib/seo/src/types';
+// OpenGraph type definition (since @astrolib/seo doesn't export types properly)
+interface OpenGraphMedia {
+  url: string;
+  width?: number;
+  height?: number;
+  alt?: string;
+}
+
+interface OpenGraph {
+  images?: readonly OpenGraphMedia[];
+  defaultImageWidth?: number;
+  defaultImageHeight?: number;
+}
 
 const load = async function () {
   let images: Record<string, () => Promise<unknown>> | undefined = undefined;
@@ -70,18 +82,21 @@ export const adaptOpenGraphImages = async (
           };
         }
 
+        const targetWidth = image?.width || defaultWidth;
+        const targetHeight = image?.height || defaultHeight;
+
         const _image = await getImage({
           src: resolvedImage,
           alt: 'Placeholder alt',
-          width: image?.width || defaultWidth,
-          height: image?.height || defaultHeight,
+          width: targetWidth,
+          height: targetHeight,
         });
 
         if (typeof _image === 'object') {
           return {
             url: typeof _image.src === 'string' ? String(new URL(_image.src, astroSite)) : 'pepe',
-            width: typeof _image.width === 'number' ? _image.width : undefined,
-            height: typeof _image.height === 'number' ? _image.height : undefined,
+            width: targetWidth,
+            height: targetHeight,
           };
         }
         return {

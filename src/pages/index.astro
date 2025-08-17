@@ -18,41 +18,6 @@ const metadata = {
 
 <Layout metadata={metadata}>
   <Fragment slot="announcement"></Fragment>
-  <Fragment slot="header">
-    <Header
-      links={[
-        { text: 'Home', href: '#' },
-        { text: 'About', href: '#about' },
-        { text: 'Resume', href: '#resume' },
-        {
-          text: 'Blog',
-          links: [
-            {
-              text: 'Blog List',
-              href: getBlogPermalink(),
-            },
-            {
-              text: 'Web Development',
-              href: getPermalink('web-development', 'tag'),
-            },
-            {
-              text: 'Learning',
-              href: getPermalink('learning', 'tag'),
-            },
-          ],
-        },
-        { text: 'Github', href: 'https://github.com/afogel' },
-      ]}
-      actions={[
-        {
-          text: 'Contact Me',
-          href: '#',
-        },
-      ]}
-      isSticky
-      showToggleTheme
-    />
-  </Fragment>
 
   <!-- Hero2 Widget ******************* -->
 
@@ -127,8 +92,14 @@ const metadata = {
     items={[
       {
         title:
-          'Founding Engineer and Researcher <br /> <a href="https://pillar.security/"><span class="font-normal">Pillar Security</span></a> <br /> <span class="text-sm font-normal">Tel-Aviv,  2023 - Present</span>',
-        description: ``,
+          'Founding Engineer and Researcher <br /> <a href="https://pillar.security/"><span class="font-normal">Pillar Security</span></a> <br /> <span class="text-sm font-normal">Tel-Aviv, Dec 2023 - Present</span>',
+        description: `Core founding engineer building the product from 0 to 1, contributing to a $9 million seed round.
+        <ul class="mt-2 space-y-1">
+          <li>• Architected full-stack AISPM (AI Security Posture Management) and EDR platform</li>
+          <li>• Built AI-powered threat modeling and red teaming suite for LLMs</li>
+          <li>• Trained and deployed production classifier models for attack detection</li>
+          <li>• Published security research on AI supply chain vulnerabilities</li>
+        </ul>`,
         icon: 'tabler:briefcase',
       },
       {

@@ -26,7 +26,7 @@ I've been using VS Code for the past few years and I've been impressed by the ID
 
 No more.
 
-If you're: 
+If you're:
 
 - tired of dealing with a terrible, complicated, and broken method to manage dependencies, using tools that don't integrate easily together
 - tired of not knowing how to setup your `launch.json` so that you can easily activate an interactive debugging session
@@ -75,8 +75,13 @@ asdf global poetry latest
 The benefit of managing languages and dependency managers with `asdf` is that we have the same entry point for both. No more hours of dealing with "oh, wait, how do I get the dependencies I installed with `miniconda` to talk to those I installed with `pip`?". Now, your $PATH variable will point to the same place for both Python and dependencies.
 
 As an added bonus, these versions can be set and managed on a per-project level using a `.tool-versions` file.
+
 <p align="center">
-<img src="https://m.media-amazon.com/images/M/MV5BMDRlZTA3OWUtNDM0ZS00MzMwLWFlYTctYzE4YzQxZTkzNTZjXkEyXkFqcGc@._V1_.jpg" alt="What a country, eh?!" width="400" />
+  <img
+    src="https://m.media-amazon.com/images/M/MV5BMDRlZTA3OWUtNDM0ZS00MzMwLWFlYTctYzE4YzQxZTkzNTZjXkEyXkFqcGc@._V1_.jpg"
+    alt="What a country, eh?!"
+    width="400"
+  />
 </p>
 
 ### Step 2: Configuring poetry
@@ -113,19 +118,19 @@ With asdf and poetry configured, we can set up the project. This step is a boile
 
 3. Create your hello world server
 
-    ```bash
-    mkdir -p app && touch app/main.py && cat << EOF > app/main.py
-    from fastapi import FastAPI
-    
-    app = FastAPI()
-    
-    @app.get("/")
-    async def root():
-        return {"message": "Hello World"}
-    EOF
-    ```
+   ```bash
+   mkdir -p app && touch app/main.py && cat << EOF > app/main.py
+   from fastapi import FastAPI
 
-    This command will create the app/main.py file that fastapi looks for to serve the hello world program on http://localhost:8000.
+   app = FastAPI()
+
+   @app.get("/")
+   async def root():
+       return {"message": "Hello World"}
+   EOF
+   ```
+
+   This command will create the app/main.py file that fastapi looks for to serve the hello world program on http://localhost:8000.
 
 ### Step 4: Configuring VSCode
 

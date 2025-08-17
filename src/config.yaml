@@ -23,8 +23,8 @@ metadata:
         height: 628
     type: website
   twitter:
-    handle: '@onwidget'
-    site: '@onwidget'
+    handle: '' # Update with your Twitter handle
+    site: '' # Update with your Twitter handle
     cardType: summary_large_image
 
 i18n:

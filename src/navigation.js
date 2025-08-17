@@ -22,6 +22,10 @@ export const headerData = {
           href: getBlogPermalink(),
         },
         {
+          text: 'AI Security',
+          href: getPermalink('ai-security', 'tag'),
+        },
+        {
           text: 'Web Development',
           href: getPermalink('web-development', 'tag'),
         },
@@ -36,7 +40,12 @@ export const headerData = {
       href: 'https://www.github.com/afogel',
     },
   ],
-  actions: [],
+  actions: [
+    {
+      text: 'Contact Me',
+      href: '#',
+    },
+  ],
 };
 
 export const footerData = {
