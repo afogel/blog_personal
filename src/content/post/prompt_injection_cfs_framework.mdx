@@ -14,13 +14,9 @@ featured: true
 
 ## LLMs can be tricked by emails, comments, and diagrams
 
-Your inbox. Your code comments. Even a simple diagram. Any of them can hijack an LLM.
+Every week, [new exploits are published](https://embracethered.com/blog/posts/2025/announcement-the-month-of-ai-bugs/) that show it’s not a one-off trick but a repeatable attack. To a human, the data looks harmless. To the model, it looks like instructions from a trusted source.
 
-Indirect prompt injection is moving fast. Every week, [new exploits are published](https://embracethered.com/blog/posts/2025/announcement-the-month-of-ai-bugs/) that show it’s not a one-off trick but a repeatable attack. To a human, the data looks harmless. To the model, it looks like instructions from a trusted source.
-
-This post introduces the **CFS model — Context, Format, and Salience.** It’s a simple way to see why most injections still flop, but others are increasingly succeeding.
-
-Even if you’re “just” building an LLM-powered chatbot, support assistant, or IDE helper, these attacks apply to you. If your system connects an LLM to any data source, this is the anatomy of the attack you need to recognize—before it recognizes you.
+This post introduces the **CFS model — Context, Format, and Salience.** It’s a simple way to parse out which factors make an attack attempt likely to succeed, and which will not. If your system connects an LLM to any data source and you're worried about how it may be abused, this will help you identify which hallmarks separate the dangerous from harmless attempts.
 
 ---
 
